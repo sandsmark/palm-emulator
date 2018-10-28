@@ -1,0 +1,99 @@
+--- BuildUnix/configure.in	Sat Mar 30 01:11:13 2002
++++ BuildUnix/configure.in	Wed May 11 14:49:58 2005
+@@ -34,7 +34,7 @@
+ 	[  --with-fltk=DIR         use FLTK in DIR], [
+ 	CPPFLAGS="${CPPFLAGS} -I$withval/include"
+ 	LDFLAGS="${LDFLAGS} -L$withval/lib"
+-])
++	test "${FLUID+set}" != set && test -r "$withval/bin/fluid" && FLUID="$withval/bin/fluid"])
+ 
+ 
+ dnl ========================================================
+@@ -339,8 +339,36 @@
+ 
+ 
+ dnl ========================================================
++dnl Check whether the following code distilled from EmPoint.cpp
++dnl is compiled correctly -- GCC 3.3.x miscompiles this.
++dnl ========================================================
++
++AC_CACHE_CHECK([whether certain fragile casting works],
++	pose_cv_return_casting_ok,
++	AC_TRY_RUN([[
++		struct point { short x, y; };
++		point foo (long fX, long fY)
++		{
++			short pt[2]; pt[0] = fX; pt[1] = fY; return *(point*)pt;
++		}
++		int main()
++		{
++			point p = foo (28, 37);
++			return (p.x == 28 && p.y == 37)? 0 : 1;
++		}
++		]],
++		pose_cv_return_casting_ok=yes, pose_cv_return_casting_ok=no,
++		pose_cv_return_casting_ok="assuming yes"))
++
++if test "$pose_cv_return_casting_ok" = no; then
++	AC_DEFINE(BROKEN_RETURN_CASTING)
++fi
++
++
++dnl ========================================================
+ dnl Make sure FLTK is available.  It must be installed on
+-dnl a standard path, or on $x_libraries.
++dnl a standard path, or on $x_libraries, or via --with-fltk.
++dnl Also check that fluid is available (via PATH or --with-fltk).
+ dnl ========================================================
+ 
+ AC_CACHE_SAVE
+@@ -350,18 +378,41 @@
+ LIBS="-lfltk ${GLLIB} -L${ac_x_libraries} -lXext -lX11 -lm $X_EXTRA_LIBS $LIBS"
+ 
+ AC_LANG_CPLUSPLUS
+-AC_CACHE_CHECK([for 'int fl_height (void)' in -lfltk], pose_cv_lib_fltk_found,
+-	AC_TRY_LINK([#include <Fl/fl_draw.H>], [fl_height ();],
+-		pose_cv_lib_fltk_found=yes, pose_cv_lib_fltk_found=no))
++
++AC_DEFUN([MSG_ERROR_FLTK_MISSING],
++[AC_MSG_ERROR([*** FLTK *must* be installed before running configure. ***])])
++
++dnl CHECK_FLTK_FUNC(HEADER, FUNCTION, ARGUMENT_LIST)
++AC_DEFUN([CHECK_FLTK_FUNC],
++[AC_MSG_CHECKING([for fl_$2 in -lfltk])
++AC_TRY_LINK([#include <$1>], [fl_$2 ($3);],
++	[result=yes],
++	[AC_TRY_LINK([#include <$1>], [$2 ($3);],
++		[result=$2
++		AC_DEFINE([fl_$2], [$2])],
++		[result=no])])
++AC_MSG_RESULT($result)
++if test $result = no; then
++	MSG_ERROR_FLTK_MISSING
++fi])
++
++CHECK_FLTK_FUNC([FL/Enumerations.H], [contrast], [FL_BLACK, FL_BLACK])
++CHECK_FLTK_FUNC([FL/Enumerations.H], [inactive], [FL_BLACK])
++CHECK_FLTK_FUNC([FL/filename.H], [filename_absolute], ["", ""])
++CHECK_FLTK_FUNC([FL/filename.H], [filename_ext], [""])
++CHECK_FLTK_FUNC([FL/filename.H], [filename_isdir], [""])
++CHECK_FLTK_FUNC([FL/filename.H], [filename_list], ["", 0])
++CHECK_FLTK_FUNC([FL/filename.H], [filename_match], ["", ""])
++CHECK_FLTK_FUNC([FL/filename.H], [filename_setext], ["", ""])
+ 
+ LIBS="$save_LIBS"
+ 
+-if test $pose_cv_lib_fltk_found = yes; then
+-	AC_DEFINE(HAVE_LIBFLTK)
+-else
+-	AC_MSG_ERROR(*** FLTK *must* be installed before running configure. ***)
+-fi
++dnl $FLUID may have already been set by --with-fltk, above
++AC_CHECK_PROG(FLUID, fluid, fluid, no)
+ 
++if test "$FLUID" = no; then
++	MSG_ERROR_FLTK_MISSING
++fi
+ 
+ dnl ========================================================
+ dnl = Append the FLAGS variable that contains options for
