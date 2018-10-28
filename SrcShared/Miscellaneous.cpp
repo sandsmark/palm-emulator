@@ -1370,7 +1370,7 @@ void SetHotSyncUserName (const char* userNameP)
 	char	buffer[ sizeof (DlpReqHeaderType) +
 					sizeof (DlpTinyArgWrapperType) +
 					sizeof (DlpWriteUserInfoReqHdrType) +
-					dlpMaxUserNameSize];
+					dlpMaxUserNameSize] __attribute__((__aligned__(2));
 
 	// Get handy pointers to all of the above.
 	DlpReqHeaderType*			reqHdr		= (DlpReqHeaderType*) buffer;
