@@ -47,6 +47,7 @@
 
 #include "algorithm"			// find, remove_if, unary_function<>
 
+#include "PHEMNativeIF.h"
 
 #if !PLATFORM_UNIX
 static void		PrvAppendDescriptors	(EmTransportDescriptorList& menuItems,
@@ -1687,11 +1688,14 @@ EmDlgFnResult EmDlg::PrvReset (EmDlgContext& context)
 	EmDlgRef		dlg = context.fDlg;
 	EmResetType&	choice = *(EmResetType*) context.fUserData;
 
+        PHEM_Log_Msg("In EmDlg::PrvReset");
 	switch (context.fCommandID)
 	{
 		case kDlgCmdInit:
 		{
+                        PHEM_Log_Msg("Doing init.");
 			EmDlg::SetItemValue (dlg, kDlgItemRstSoft, 1);
+                        PHEM_Log_Msg("Finishing init.");
 			break;
 		}
 
@@ -1706,22 +1710,27 @@ EmDlgFnResult EmDlg::PrvReset (EmDlgContext& context)
 			{
 				case kDlgItemOK:
 				{
+                                        PHEM_Log_Msg("Got OK");
 					if (EmDlg::GetItemValue (dlg, kDlgItemRstSoft))
 					{
+                                                PHEM_Log_Msg("Doing soft");
 						choice = kResetSoft;
 					}
 					else if (EmDlg::GetItemValue (dlg, kDlgItemRstHard))
 					{
+                                                PHEM_Log_Msg("Doing hard");
 						choice = kResetHard;
 					}
 					else
 					{
+                                                PHEM_Log_Msg("Doing debug");
 						EmAssert (EmDlg::GetItemValue (dlg, kDlgItemRstDebug));
 						choice = kResetDebug;
 					}
 
 					if (EmDlg::GetItemValue (dlg, kDlgItemRstNoExt) != 0)
 					{
+                                                PHEM_Log_Msg("Doing no reset");
 						choice = (EmResetType) ((int) choice | kResetNoExt);
 					}
 					// Fall thru...
@@ -1729,6 +1738,7 @@ EmDlgFnResult EmDlg::PrvReset (EmDlgContext& context)
 
 				case kDlgItemCancel:
 				{
+                                        PHEM_Log_Msg("ResultClose");
 					return kDlgResultClose;
 				}
 
@@ -1736,6 +1746,8 @@ EmDlgFnResult EmDlg::PrvReset (EmDlgContext& context)
 				case kDlgItemRstHard:
 				case kDlgItemRstDebug:
 				case kDlgItemRstNoExt:
+                                        PHEM_Log_Msg("Got item ID:");
+                                        PHEM_Log_Place(context.fItemID);
 					break;
 
 				default:
@@ -1746,6 +1758,7 @@ EmDlgFnResult EmDlg::PrvReset (EmDlgContext& context)
 		}
 
 		case kDlgCmdDestroy:
+                        PHEM_Log_Msg("Destroy?");
 			break;
 
 		case kDlgCmdPanelEnter:
@@ -1832,7 +1845,7 @@ EmDlgFnResult EmDlg::PrvROMTransferQuery (EmDlgContext& context)
 			// !!! TBD: restore port setting from a preference.
 
 #if PLATFORM_UNIX
-			EmDlg::SetItemText (dlg, kDlgItemDlqPortList, "/dev/ttyS0");
+			EmDlg::SetItemText (dlg, kDlgItemDlqPortList, "/dev/ttyUSB0");
 #else
 			Preference<string>	pref (kPrefKeyPortDownload);
 			::PrvAppendMenuItems (dlg, kDlgItemDlqPortList, data.fPortNameList, *pref);

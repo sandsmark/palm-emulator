@@ -24,6 +24,8 @@
 #include "PreferenceMgr.h"		// Preference
 #include "Strings.r.h"			// kStr_Autoload, etc.
 
+#include "PHEMNativeIF.h"
+
 #include <algorithm>			// find()
 #include <string>
 #include <utility>				// make_pair()
@@ -388,11 +390,13 @@ int Startup::PrvParseOneOption (int argc, char** argv, int& argIndex)
 	const char*	arg = argv[argIndex];
 
 	// For this argument, see if it is a recognized switch.
-
+        PHEM_Log_Msg("PrvParseOneOption");
+        PHEM_Log_Msg(arg);
 	for (size_t ii = 0; ii < countof (kOptionMap); ++ii)
 	{
 		if (_stricmp (arg, kOptionMap[ii].option) == 0)
 		{
+                        PHEM_Log_Msg("Option recognized");
 			// It's recognized; see if we need to also collect a parameter.
 
 			if (kOptionMap[ii].optType == 0)
@@ -405,8 +409,10 @@ int Startup::PrvParseOneOption (int argc, char** argv, int& argIndex)
 			}
 			else if (kOptionMap[ii].optType == 1)
 			{
+                                PHEM_Log_Msg("Getting param");
 				if ((argIndex + 1) < argc)
 				{
+                                        PHEM_Log_Msg(argv[argIndex + 1]);
 					// Add the switch and parameter to our collection.
 					// Put preferences on a seperate list -- a multimap
 					// -- so that we can support more than one.  All others
@@ -423,6 +429,7 @@ int Startup::PrvParseOneOption (int argc, char** argv, int& argIndex)
 				}
 				else
 				{
+                                        PHEM_Log_Msg("Missing arg");
 					// Needed a parameter, but there wasn't one.
 					Startup::PrvMissingArgument (arg);
 					return 0;
@@ -441,6 +448,7 @@ int Startup::PrvParseOneOption (int argc, char** argv, int& argIndex)
 	{
 		if (ref.IsType (kFileTypeROM))
 		{
+                        PHEM_Log_Msg("Loading rom w/no flag");
 			(*gOptions)[kOptROM] = arg;
 			argIndex += 1;
 			return 1;
@@ -448,6 +456,7 @@ int Startup::PrvParseOneOption (int argc, char** argv, int& argIndex)
 
 		if (ref.IsType (kFileTypeSession))
 		{
+                        PHEM_Log_Msg("Loading session w/no flag");
 			(*gOptions)[kOptPSF] = arg;
 			argIndex += 1;
 			return 1;
@@ -456,6 +465,7 @@ int Startup::PrvParseOneOption (int argc, char** argv, int& argIndex)
 
 	// And if we got this far, return an error.
 
+        PHEM_Log_Msg("OneArg returning error");
 	return 0;
 }
 
@@ -470,14 +480,18 @@ Bool Startup::PrvCollectOptions (int argc, char** argv,
 	gPreferences = &prefs;
 
 	int errorArg;
+        PHEM_Log_Msg("PrvCollectOptions...");
 
 	if (!Platform::CollectOptions (argc, argv, errorArg, &Startup::PrvParseOneOption))
 	{
+                PHEM_Log_Msg("Platform::CollectOptions error.");
 		Startup::PrvDontUnderstand (argv[errorArg]);
 		Startup::PrvPrintHelp ();
+                PHEM_Log_Msg("CollectOptions returning false.");
 		return false;
 	}
 
+        PHEM_Log_Msg("CollectOptions returning true.");
 	return true;
 }
 
@@ -509,6 +523,7 @@ Bool Startup::PrvConvertRAM (const string& str, RAMSizeType& ramSize)
 	{
 		if (ramSize == iter->first)
 		{
+                        PHEM_Log_Msg("ConvertRAM returning true.");
 			return true;
 		}
 
@@ -630,6 +645,7 @@ Bool Startup::PrvHandleCreateSessionParameters (OptionList& options)
 	Bool					haveSome	= haveROM || haveRAM || haveDevice;
 	Bool					haveAll		= haveROM && haveRAM && haveDevice;
 
+        PHEM_Log_Msg("CreateSessionParameters...");
 	if (haveSome)
 	{
 		Preference<Configuration>	prefConfig (kPrefKeyLastConfiguration);
@@ -639,6 +655,8 @@ Bool Startup::PrvHandleCreateSessionParameters (OptionList& options)
 
 		if (haveROM)
 		{
+                        PHEM_Log_Msg("Have ROM...");
+                        PHEM_Log_Msg(optROM.c_str());
 			cfg.fROMFile = EmFileRef (optROM);
 		}
 
@@ -646,8 +664,11 @@ Bool Startup::PrvHandleCreateSessionParameters (OptionList& options)
 
 		if (haveRAM)
 		{
+                        PHEM_Log_Msg("Have RAM...");
+                        PHEM_Log_Msg(optRAM.c_str());
 			if (!Startup::PrvConvertRAM (optRAM, cfg.fRAMSize))
 			{
+                                PHEM_Log_Msg("Invalid ram size!");
 				Startup::PrvInvalidRAMSize (optRAM.c_str ());
 				return false;
 			}
@@ -657,6 +678,8 @@ Bool Startup::PrvHandleCreateSessionParameters (OptionList& options)
 
 		if (haveDevice)
 		{
+                        PHEM_Log_Msg("Have dev...");
+                        PHEM_Log_Msg(optDevice.c_str());
 			EmDevice	device (optDevice);
 			if (device.Supported ())
 			{
@@ -677,6 +700,7 @@ Bool Startup::PrvHandleCreateSessionParameters (OptionList& options)
 			// User cancelled the "New Configuration" dialog.
 			// Bring up the dialog with the New/Open/Download/Exit buttons.
 
+                        PHEM_Log_Msg("didn't haveall or doc-asknew; Calling ScheduleAskWhatToDo.");
 			Startup::ScheduleAskWhatToDo ();
 		}
 		else
@@ -687,10 +711,12 @@ Bool Startup::PrvHandleCreateSessionParameters (OptionList& options)
 
 			// Schedule the new action
 
+                        PHEM_Log_Msg("Calling ScheduleCreateSession.");
 			Startup::ScheduleCreateSession (cfg);
 		}
 	}
 
+        PHEM_Log_Msg("CreateSession Parameters returning true.");
 	return true;
 }
 
@@ -975,11 +1001,13 @@ Bool Startup::PrvParseCommandLine (int argc, char** argv)
 	OptionList		options;
 	PreferenceList	prefs;
 
+        PHEM_Log_Msg("PrvParseCommandLine...");
 	// Convert the command line into a map of switch/parameter pairs.
 
 	if (!Startup::PrvCollectOptions (argc, argv, options, prefs))
 		goto BadParameter;
 
+        PHEM_Log_Msg("Handle open session?");
 	// Handle kOptPSF.
 
 	if (!Startup::PrvHandleOpenSessionParameters (options))
@@ -987,6 +1015,7 @@ Bool Startup::PrvParseCommandLine (int argc, char** argv)
 
 	// Handle kOptROM, kOptRAM, and kOptDevice.
 
+        PHEM_Log_Msg("Handle create session?");
 	if (!Startup::PrvHandleCreateSessionParameters (options))
 		goto BadParameter;
 
@@ -994,19 +1023,23 @@ Bool Startup::PrvParseCommandLine (int argc, char** argv)
 	// kOptHordeSaveFreq, kOptHordeDepthMax, kOptHordeDepthSwitch, and
 	// kOptHordeQuitWhenDone.
 
+        PHEM_Log_Msg("Handle horde?");
 	if (!Startup::PrvHandleNewHordeParameters (options))
 		goto BadParameter;
 
 	// Handle kOptLoad, kOptRun, and kOptQuitOnExit.
 
+        PHEM_Log_Msg("Handle load/run/quit?");
 	if (!Startup::PrvHandleAutoLoadParameters (options))
 		goto BadParameter;
 
+        PHEM_Log_Msg("Handle skin?");
 	// Handle kOptSkin
 	if (!Startup::PrvHandleSkinParameters (options))
 		goto BadParameter;
 
 	// Handle preference changes.
+        PHEM_Log_Msg("Handle pref?");
 	if (!Startup::PrvHandlePreferenceParameters (prefs))
 		goto BadParameter;
 
@@ -1016,6 +1049,7 @@ BadParameter:
 	// All bets are off.  Bring up the dialog with the
 	// New/Open/Download/Exit buttons.
 
+        PHEM_Log_Msg("Bad param!");
 	Startup::ScheduleAskWhatToDo ();
 	return false;
 }
@@ -1079,6 +1113,7 @@ Bool Startup::DetermineStartupActions (int argc, char** argv)
 {
 	// By default, throw up our hands.
 
+        PHEM_Log_Msg("in DetStartupAct.");
 	Startup::ScheduleAskWhatToDo ();
 
 	// See if the user wants to force the appearance of the Startup
@@ -1087,6 +1122,7 @@ Bool Startup::DetermineStartupActions (int argc, char** argv)
 
 	if (!Platform::ForceStartupScreen ())
 	{
+                PHEM_Log_Msg("DetStartupAct, !ForceStartupScreen.");
 		Preference<Configuration>	pref1 (kPrefKeyLastConfiguration);
 		Preference<EmFileRef>		pref2 (kPrefKeyLastPSF);
 
@@ -1097,6 +1133,7 @@ Bool Startup::DetermineStartupActions (int argc, char** argv)
 
 		if (ramFileRef.IsSpecified ())
 		{
+                        PHEM_Log_Msg("DetStartupAct, ScheduleOpenSession.");
 			Startup::ScheduleOpenSession (ramFileRef);
 		}
 
@@ -1105,18 +1142,22 @@ Bool Startup::DetermineStartupActions (int argc, char** argv)
 
 		else if (cfg.IsValid () )
 		{
+                        PHEM_Log_Msg("DetStartupAct, ScheduleCreateSession.");
 			Startup::ScheduleCreateSession (cfg);
 		}
 
 		// Now that default actions have been established, let's see if
 		// there's anything interesting on the command line.
 
+                PHEM_Log_Msg("Parsing Command Line.");
 		if (!Startup::PrvParseCommandLine (argc, argv))
 		{
+                        PHEM_Log_Msg("error Parsing Command Line.");
 			return false;
 		}
 	}
 
+        PHEM_Log_Msg("end DetStartupAct.");
 	return true;
 }
 
@@ -1541,6 +1582,7 @@ void Startup::ScheduleAskWhatToDo (void)
 
 void Startup::ScheduleCreateSession (const Configuration& cfg)
 {
+        PHEM_Log_Msg("In ScheduleCreateSession.");
 	gCreateSession = true;
 //	gAskWhatToDo = false;
 	gCfg = cfg;
@@ -1585,6 +1627,7 @@ void Startup::ScheduleOpenSession (const EmFileRef& ref)
 
 void Startup::ScheduleMinimize (const EmFileRef& ref)
 {
+        PHEM_Log_Msg("In ScheduleMinimize.");
 	gMinimize = true;
 	gMinimizeQuitWhenDone = true;
 //	gAskWhatToDo = false;

@@ -283,9 +283,11 @@ local  void check_match OF((IPos start, IPos match, int length));
 /* ===========================================================================
  * Initialize the "longest match" routines for a new file
  */
-void lm_init (pack_level, flags)
+void lm_init (int pack_level, ush *flags)
+#if 0
     int pack_level; /* 0: store, 1: best speed, 9: best compression */
     ush *flags;     /* general purpose bit flag */
+#endif
 {
     register unsigned j;
 
@@ -354,8 +356,10 @@ void lm_init (pack_level, flags)
  * match.s. The code is functionally equivalent, so you can use the C version
  * if desired.
  */
-int longest_match(cur_match)
+int longest_match(IPos cur_match)
+#if 0
     IPos cur_match;                             /* current match */
+#endif
 {
     unsigned chain_length = max_chain_length;   /* max hash chain length */
     register uch *scan = window + strstart;     /* current string */
@@ -484,9 +488,11 @@ int longest_match(cur_match)
 /* ===========================================================================
  * Check that the match at match_start is indeed a match.
  */
-local void check_match(start, match, length)
+local void check_match(IPos start, IPos match, int length)
+#if 0
     IPos start, match;
     int length;
+#endif
 {
     /* check that the match is indeed a match */
     if (memcmp((char*)window + match,

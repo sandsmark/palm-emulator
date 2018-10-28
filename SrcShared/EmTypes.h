@@ -39,7 +39,9 @@
 
 typedef uint32				emuptr;
 
-typedef int 				Bool;
+// Changed from typedef to avoid conflict with X Window 'Bool' type
+// Caused problem with EmDlgFltkFactory.fl compile
+#define Bool int
 
 typedef int32				ErrCode;
 typedef int32				StrCode;

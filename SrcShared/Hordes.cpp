@@ -36,6 +36,9 @@
 
 #include <math.h>				// sqrt
 #include <time.h>				// time, localtime
+/* Update for GCC 4 */
+#include <string.h>
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // HORDES CONSTANTS
@@ -290,7 +293,7 @@ Hordes::NewGremlin (const GremlinInfo &info)
 
 /***********************************************************************
  *
- * FUNCTION:	Hordes::Status
+ * FUNCTION:	Hordes::HStatus
  *
  * DESCRIPTION: Returns several pieces of status information about the
  *				currently running Gremlin in the Horde.
@@ -306,10 +309,10 @@ Hordes::NewGremlin (const GremlinInfo &info)
  ***********************************************************************/
 
 void
-Hordes::Status (unsigned short *currentNumber, unsigned long *currentStep,
+Hordes::HStatus (unsigned short *currentNumber, unsigned long *currentStep,
 				unsigned long *currentUntil)
 {
-	gTheGremlin.Status (currentNumber, currentStep, currentUntil);
+	gTheGremlin.GStatus (currentNumber, currentStep, currentUntil);
 }
 
 
@@ -491,7 +494,7 @@ Hordes::EventCounter (void)
 	unsigned long	step;
 	unsigned long	until;
 
-	Hordes::Status (&number, &step, &until);
+	Hordes::HStatus (&number, &step, &until);
 
 	return step;
 }
@@ -517,7 +520,7 @@ Hordes::EventLimit(void)
 	unsigned long	step;
 	unsigned long	until;
 
-	Hordes::Status (&number, &step, &until);
+	Hordes::HStatus (&number, &step, &until);
 
 	return until;
 }

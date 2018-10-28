@@ -37,7 +37,7 @@ public:
 	void		Save(SessionFile &f);
 	Boolean		Load(SessionFile &f);
 
-	void		Status(UInt16 *currentNumber, UInt32 *currentStep,
+	void		GStatus(UInt16 *currentNumber, UInt32 *currentStep,
 					UInt32 *currentUntil);
 	Boolean		SetSeed(UInt32 newSeed);
 	void		SetUntil(UInt32 newUntil);

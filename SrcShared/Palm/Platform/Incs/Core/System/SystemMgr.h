@@ -62,14 +62,13 @@
 // NOTE:  It is strongly recommended that developers avoid using these
 // defines, and use the SysTicksPerSecond() API (below) instead....
 #if EMULATION_LEVEL == EMULATION_MAC
-	#define	sysTicksPerSecond				60					// 60/sec on Macintosh
+	#define	sysTicksPerSecond				60	// 60/sec on Macintosh
 #elif EMULATION_LEVEL == EMULATION_NONE
-	#define	sysTicksPerSecond				100				// 100/sec on Pilot
+	#define	sysTicksPerSecond				100	// 100/sec on Pilot
 #elif EMULATION_LEVEL == EMULATION_WINDOWS
-	#define	sysTicksPerSecond				1000				// 1000/sec on Windows PC
+	#define	sysTicksPerSecond				1000	// 1000/sec on Windows PC
 #elif EMULATION_LEVEL == EMULATION_UNIX
-	#define sysTicksPerSecond				1000
-	// 1000/sec on Linux
+	#define sysTicksPerSecond				100	// 1000/sec on Linux
 #else
 	#error Invalid EMULATION_LEVEL
 #endif

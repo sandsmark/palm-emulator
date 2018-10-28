@@ -22,6 +22,7 @@
 #include "SessionFile.h"		// SessionFile
 
 #include <stdio.h>				// sprintf
+#include <cstddef>
 
 
 // ===========================================================================

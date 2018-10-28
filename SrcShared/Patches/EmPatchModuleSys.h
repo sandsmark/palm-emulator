@@ -64,6 +64,7 @@ class SysHeadpatch
 		static CallROMType		SysFatalAlert			(void);
 		static CallROMType		SysLaunchConsole		(void);
 		static CallROMType		SysSemaphoreWait		(void);
+		static CallROMType		SysTicksPerSecond		(void);
 		static CallROMType		SysUIAppSwitch			(void);
 		static CallROMType		TblHandleEvent			(void);
 };

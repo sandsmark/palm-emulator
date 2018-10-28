@@ -19,6 +19,8 @@
 #include "EmPatchModuleMap.h"
 #include "EmStructs.h"
 #include "EmPalmFunction.h"		// SysTrapIndex, IsLibraryTrap
+/* Update for GCC 4 */
+#include <string.h>
 
 
 /***********************************************************************

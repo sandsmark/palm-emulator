@@ -1370,7 +1370,7 @@ void SetHotSyncUserName (const char* userNameP)
 	char	buffer[ sizeof (DlpReqHeaderType) +
 					sizeof (DlpTinyArgWrapperType) +
 					sizeof (DlpWriteUserInfoReqHdrType) +
-					dlpMaxUserNameSize] __attribute__((__aligned__(2));
+					dlpMaxUserNameSize] __attribute__((__aligned__(2)));
 
 	// Get handy pointers to all of the above.
 	DlpReqHeaderType*			reqHdr		= (DlpReqHeaderType*) buffer;
@@ -2685,7 +2685,7 @@ void FormatInteger (char* dest, uint32 integer)
 	sprintf (dest, "%ld", integer);
 
 	// Get the thousands separator character(s).
-
+#ifdef HAVE_LOCALECONV
 	struct lconv*	locale_data = localeconv ();
 	char*			thousands_sep = locale_data->thousands_sep;
 
@@ -2693,6 +2693,9 @@ void FormatInteger (char* dest, uint32 integer)
 	{
 		thousands_sep = ",";
 	}
+#else
+	char*			thousands_sep = ",";
+#endif
 
 	// Insert the thousands separator(s).
 
@@ -2745,7 +2748,7 @@ string FormatInteger (uint32 integer)
 	stream.freeze (false);
 
 	// Get the thousands separator character(s).
-
+#ifdef HAVE_LOCALECONV
 	struct lconv*	locale_data = localeconv ();
 	char*			thousands_sep = locale_data->thousands_sep;
 
@@ -2753,6 +2756,9 @@ string FormatInteger (uint32 integer)
 	{
 		thousands_sep = ",";
 	}
+#else
+	char*			thousands_sep = ",";
+#endif
 
 	// Insert the thousands separator(s).
 
@@ -2916,7 +2922,7 @@ void GetMemoryTextList (MemoryTextList& memoryList)
 	memoryList.push_back (make_pair (RAMSizeType (2048), string ("2048K")));
 	memoryList.push_back (make_pair (RAMSizeType (4096), string ("4096K")));
 	memoryList.push_back (make_pair (RAMSizeType (8192), string ("8192K")));
-	memoryList.push_back (make_pair (RAMSizeType (16384), string ("16,384K")));
+	memoryList.push_back (make_pair (RAMSizeType (16384), string ("16384K")));
 }
 
 

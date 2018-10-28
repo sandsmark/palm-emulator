@@ -20,6 +20,9 @@
 #include "EmFileRef.h"			// EmFileRef, EmFileRefList
 #include "EmTypes.h"			// RAMSizeType
 
+#if EMULATION_LEVEL == EMULATION_UNIX
+#include <time.h>
+#endif
 /*
 	EmApplication is an abstract class for handling Palm OS Emulator
 	operations that don't require a document (or session) to be open or
@@ -55,6 +58,18 @@ class EmApplication : public EmActionHandler
 	public:
 								EmApplication		(void);
 		virtual					~EmApplication		(void);
+
+	public:
+#if EMULATION_LEVEL == EMULATION_UNIX
+            unsigned long last_ticks;// = 0;
+            unsigned long max_tps;// = 0;
+            unsigned long min_tps;// = 1000000;
+            unsigned long avg_tps;
+            unsigned long tps_count;// = 0;
+            unsigned long tps_total;// = 0;
+            struct timespec last_time;
+#endif
+            unsigned long ticks_per_second;// = sysTicksPerSecond;
 
 	public:
 		virtual Bool			Startup				(int argc, char** argv);
@@ -234,6 +249,7 @@ class EmApplication : public EmActionHandler
 
 	private:
 		Bool					CloseDocument		(Bool quitting);
+                void  Prv_Measure_Ticks_Per_Second();
 
 	private:
 		Bool					fQuit;

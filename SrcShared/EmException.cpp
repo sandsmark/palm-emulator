@@ -21,6 +21,7 @@
 #include "Platform.h"			// Platform::GetString
 #include "Strings.r.h"			// kStr_InternalErrorException
 
+#include <string.h>
 
 // ---------------------------------------------------------------------------
 //		¥ EmException::EmException

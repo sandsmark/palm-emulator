@@ -36,8 +36,10 @@ extern ulg crc_32_tab[];   /* crc table, defined below */
  * Copy input to output unchanged: zcat == cat with --force.
  * IN assertion: insize bytes have already been read in inbuf.
  */
-int copy(in, out)
+int copy(int in, int out)
+#if 0
     int in, out;   /* input and output file descriptors */
+#endif
 {
     errno = 0;
     while (insize != 0 && (int)insize != EOF) {
@@ -57,9 +59,11 @@ int copy(in, out)
  * pointer, then initialize the crc shift register contents instead.
  * Return the current crc in either case.
  */
-ulg updcrc(s, n)
+ulg updcrc(uch *s, unsigned n)
+#if 0
     uch *s;                 /* pointer to bytes to pump through */
     unsigned n;             /* number of bytes in s[] */
+#endif
 {
     register ulg c;         /* temporary variable */
 
@@ -90,8 +94,10 @@ void clear_bufs()
 /* ===========================================================================
  * Fill the input buffer. This is called only when the buffer is empty.
  */
-int fill_inbuf(eof_ok)
+int fill_inbuf(int eof_ok)
+#if 0
     int eof_ok;          /* set if EOF acceptable as a result */
+#endif
 {
     int len;
 
@@ -150,10 +156,12 @@ void flush_window()
  * Does the same as write(), but also handles partial pipe writes and checks
  * for error return.
  */
-void write_buf(fd, buf, cnt)
+void write_buf(int fd, voidp buf, unsigned cnt)
+#if 0
     int       fd;
     voidp     buf;
     unsigned  cnt;
+#endif
 {
 #if 0	// POSER
     unsigned  n;
@@ -167,15 +175,17 @@ void write_buf(fd, buf, cnt)
     }
 #else
 	extern   int (*write_buf_proc) OF((char *buf, unsigned size));
-	write_buf_proc(buf, cnt);
+	write_buf_proc((char *)buf, cnt);
 #endif
 }
 
 /* ========================================================================
  * Put string s in lower case, return s.
  */
-char *strlwr(s)
+char *strlwr(char *s)
+#if 0
     char *s;
+#endif
 {
     char *t;
     for (t = s; *t; t++) *t = tolow(*t);
@@ -216,8 +226,10 @@ char *basename(fname)
  * MAKE_LEGAL_NAME in tailor.h and providing the function in a target
  * dependent module.
  */
-void make_simple_name(name)
+void make_simple_name(char *name)
+#if 0
     char *name;
+#endif
 {
     char *p = strrchr(name, '.');
     if (p == NULL) return;
@@ -243,9 +255,11 @@ int strcspn OF((const char *s, const char *reject));
  * Return the length of the maximum initial segment
  * of s which contains only characters in accept.
  */
-int strspn(s, accept)
+int strspn(const char *s, const char *accept)
+#if 0
     const char *s;
     const char *accept;
+#endif
 {
     register const char *p;
     register const char *a;
@@ -265,9 +279,11 @@ int strspn(s, accept)
  * Return the length of the maximum inital segment of s
  * which contains no characters from reject.
  */
-int strcspn(s, reject)
+int strcspn(const char *s, const char *reject)
+#if 0
     const char *s;
     const char *reject;
+#endif
 {
     register int count = 0;
 
@@ -346,16 +362,20 @@ char *add_envopt(argcp, argvp, env)
 /* ========================================================================
  * Error handlers.
  */
-void error(m)
+void error(char *m)
+#if 0
     char *m;
+#endif
 {
     fprintf(stderr, "\n%s: %s: %s\n", progname, ifname, m);
 
     abort_gzip();
 }
 
-void warn(a, b)
+void warn(char *a, char *b)
+#if 0
     char *a, *b;            /* message strings juxtaposed in output */
+#endif
 {
     WARN((stderr, "%s: %s: warning: %s%s\n", progname, ifname, a, b));
 }
@@ -387,10 +407,12 @@ void write_error()
 /* ========================================================================
  * Display compression ratio on the given stream on 6 characters.
  */
-void display_ratio(num, den, file)
+void display_ratio(long num, long den, FILE *file)
+#if 0
     long num;
     long den;
     FILE *file;
+#endif
 {
     long ratio;  /* 1000 times the compression ratio */
 

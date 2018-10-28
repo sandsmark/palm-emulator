@@ -52,6 +52,8 @@
 #include "EmSubroutine.h"
 #include "Marshal.h"
 
+#include "PHEMNativeIF.h"
+
 #define CALLED_GET_PARAM_FILE(name)					\
 	CALLED_GET_PARAM_VAL (emuptr, name);			\
 													\
@@ -64,9 +66,9 @@
 #include <sys/types.h>			// 
 #include <sys/stat.h>			// struct _stat
 #include <sys/utime.h>			// _utime, _utimbuf
-#include <io.h>					// _open
-#include <fcntl.h>				// O_RDWR
-#include <time.h>				// asctime, clock, clock_t, etc.
+#include <io.h>				// _open
+#include <fcntl.h>			// O_RDWR
+#include <time.h>			// asctime, clock, clock_t, etc.
 
 typedef struct _stat	_stat_;
 typedef struct _utimbuf _utimbuf_;
@@ -79,6 +81,13 @@ typedef struct _utimbuf _utimbuf_;
 #include "utime.h"				// utime
 #include <time.h>				// asctime, clock, clock_t, etc.
 #include "errno.h"				// EACCES
+// RAI 2013 for HostGetFSSize and such
+#include <sys/vfs.h>
+#define statvfs statfs
+#define fstatvfs fstatfs
+
+/* Update for GCC 4 */
+#include <stdlib.h>
 
 
 #define _O_RDWR		O_RDWR
@@ -348,15 +357,19 @@ CallROMType HandleHostControlCall (void)
 
 	CALLED_GET_PARAM_VAL (HostControlSelectorType, selector);
 
+        PHEM_Log_Msg("HostControl selector:");
+        PHEM_Log_Place(selector);
 	HostHandler	fn = PrvHostGetHandler (selector);
 
 	if (fn)
 	{
+                PHEM_Log_Msg("Calling function...");
 		fn ();
 	}
 	else
 	{
 		// !!! Display an "unknown function" error message.
+                PHEM_Log_Msg("Yikes! Unknown function!");
 	}
 
 	return kSkipROM;
@@ -777,6 +790,7 @@ static void _HostErrNo (void)
 
 #pragma mark -
 
+
 // ---------------------------------------------------------------------------
 //		¥ _HostFClose
 // ---------------------------------------------------------------------------
@@ -1073,7 +1087,27 @@ static void _HostFOpen (void)
 
 	// Call the function.
 
+#if PLATFORM_UNIX
+        // RAI 2013
+        // Note: HostFS assumes that, if a directory is opened, HostFOpen will fail.
+        // Thus, on Unix, we need to check if the specified file is a directory.
+        FILE *result = NULL;
+        struct stat stat_buf;
+
+        stat(name, &stat_buf);
+
+        if (S_ISDIR(stat_buf.st_mode)) {
+          errno = EISDIR; // HostFS.prc expects this
+        } else  {
+          result = fopen (name, mode);
+          if (result)
+          {
+                gOpenFiles.push_back (result);
+          }
+        }
+#else
 	FILE*	result = fopen (name, mode);
+#endif
 
 	if (result)
 	{
@@ -1128,7 +1162,16 @@ static void _HostFPrintF (void)
 
 	// Write everything out to the file using vfprintf.
 
-	int 	result = x_vfprintf (fh, fmt, (va_list) &stackData[0]);
+        // RAI 2013: Casting to va_list is a no-no. There simply is no portable
+        // way to do it. It's kind of a miracle it ever worked on as many platforms
+        // and compilers as it did. AMD64 and ARM are examples of platforms where
+        // it does *not* work.
+        //
+        // On the bright side, I can't find any evidence of anyone actually
+        // calling this function.
+        //
+	//int 	result = x_vfprintf (fh, fmt, (va_list) &stackData[0]);
+	int 	result = 0;
 
 	// Return the result.
 
@@ -3990,10 +4033,11 @@ static void _HostDbgClearDataBreak (void)
 static void _HostSlotMax (void)
 {
 	// long HostSlotMax(void)
+        PHEM_Log_Msg("HostSlotMax()");
 
 	CALLED_SETUP_HC ("long", "void");
 
-	int	maxSlotNo = 0;
+	Int32	maxSlotNo = 0;
 
 	Preference<SlotInfoList>	slots (kPrefKeySlotList);
 
@@ -4007,7 +4051,7 @@ static void _HostSlotMax (void)
 
 		++iter;
 	}
-
+        PHEM_Log_Place(maxSlotNo);
 	PUT_RESULT_VAL (long, maxSlotNo);
 }
 
@@ -4019,6 +4063,7 @@ static void _HostSlotMax (void)
 static void _HostSlotRoot (void)
 {
 	// const char* HostSlotRoot(long slotNo)
+        PHEM_Log_Msg("HostSlotRoot()");
 
 	CALLED_SETUP_HC ("char*", "long slotNo");
 
@@ -4035,6 +4080,8 @@ static void _HostSlotRoot (void)
 		{
 			if (iter->fSlotOccupied)
 			{
+                            PHEM_Log_Msg("Root of slot:");
+                            PHEM_Log_Msg(iter->fSlotRoot.GetFullPath().c_str());
 				::PrvReturnString (iter->fSlotRoot.GetFullPath (), sub);
 			}
 
@@ -4053,6 +4100,7 @@ static void _HostSlotRoot (void)
 static void _HostSlotHasCard (void)
 {
 	// HostBoolType HostSlotHasCard(long slotNo)
+        PHEM_Log_Msg("HostSlotHasCard()");
 
 	CALLED_SETUP_HC ("HostBoolType", "long slotNo");
 
@@ -4067,6 +4115,8 @@ static void _HostSlotHasCard (void)
 	{
 		if (slotNo == iter->fSlotNumber)
 		{
+                        PHEM_Log_Msg("SlotHasCard:");
+                        PHEM_Log_Place(iter->fSlotOccupied);
 			PUT_RESULT_VAL (HostBoolType, iter->fSlotOccupied);
 			break;
 		}
@@ -4159,6 +4209,80 @@ static void _HostGetDirectory (void)
 	}
 }
 
+#pragma mark -
+
+// RAI 2013: Add in support for getting something possibly resembling an
+// accurate size of HostFS volumes - HostGetVolSize and HostGetVolFree
+// Note: Theoretically, a UInt32 could describe 4GB. But in practice,
+// not all Palm file-management software actually supports the full
+// range. FileZ in particular apparently uses a signed Int32, so it
+// maxes out at 2GB.
+//
+// In practice, 2GB is practically infinite for a Palm anyway.
+
+#define ALMOST_TWO_GB (LONG_MAX-1)
+#define TWO_GB_MINUS_1K (LONG_MAX-1024)
+// ---------------------------------------------------------------------------
+//		¥ _HostGetVolSize
+// ---------------------------------------------------------------------------
+
+static void _HostGetVolSize(void)
+{
+	// long HostGetVolSize(char *path)
+        PHEM_Log_Msg("HostGetVolSize:");
+
+	CALLED_SETUP_HC ("long", "const char* path");
+
+	CALLED_GET_PARAM_STR (char, path);
+
+        struct statvfs the_stats;
+
+        PHEM_Log_Msg(path);
+        if (statvfs(path, &the_stats)) {
+          PHEM_Log_Msg("Host get vol size failure!");
+          PUT_RESULT_VAL (UInt32, 0);
+        }
+
+        long long vol_size = the_stats.f_frsize * the_stats.f_blocks;
+
+        // Clamp the max at 2GB, all most Palm software will comprehend
+        if (vol_size > ALMOST_TWO_GB) {
+          vol_size = ALMOST_TWO_GB;
+        }
+        PHEM_Log_Place((UInt32)vol_size);
+        PUT_RESULT_VAL (UInt32, (UInt32)vol_size);
+}
+
+// ---------------------------------------------------------------------------
+//		¥ _HostGetVolFree
+// ---------------------------------------------------------------------------
+
+static void _HostGetVolFree(void)
+{
+	// long HostGetVolFree(char *path)
+        PHEM_Log_Msg("HostGetVolFree:");
+
+	CALLED_SETUP_HC ("long", "const char* path");
+
+	CALLED_GET_PARAM_STR (char, path);
+
+        struct statvfs the_stats;
+
+        PHEM_Log_Msg(path);
+        if (statvfs(path, &the_stats)) {
+          PHEM_Log_Msg("Host get vol free failure!");
+          PUT_RESULT_VAL (long, 0);
+        }
+
+        long long vol_free = the_stats.f_bavail * the_stats.f_bsize;
+
+        // Clamp the max at about 2GB, all most Palm software will comprehend
+        if (vol_free > TWO_GB_MINUS_1K) {
+          vol_free = TWO_GB_MINUS_1K;
+        }
+        PHEM_Log_Place((UInt32)vol_free);
+        PUT_RESULT_VAL (UInt32, (UInt32)vol_free);
+}
 
 #pragma mark -
 
@@ -4734,6 +4858,9 @@ void Host::Initialize	(void)
 	gHandlerTable [hostSelectorGetFile]					= _HostGetFile;
 	gHandlerTable [hostSelectorPutFile]					= _HostPutFile;
 	gHandlerTable [hostSelectorGetDirectory]			= _HostGetDirectory;
+
+	gHandlerTable [hostSelectorHostGetVolSize]			= _HostGetVolSize;
+	gHandlerTable [hostSelectorHostGetVolFree]			= _HostGetVolFree;
 }
 
 

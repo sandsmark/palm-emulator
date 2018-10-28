@@ -1126,7 +1126,7 @@ void GremlinsSendEvent (void)
 			UInt32 step;
 
 			// Print error & stop...
-			TheGremlinsP->Status (NULL, &step, NULL);
+			TheGremlinsP->GStatus (NULL, &step, NULL);
 			sprintf(text, "Error #%lx occurred while sending.  Gremlins at %ld.  Stopping.\n", inErr, step);
 			DbgMessage(text);
 			StubAppGremlinsOff();
@@ -1205,7 +1205,7 @@ void GremlinsProcessPacket (void* bodyParamP)
 			UInt32 step;
 			
 			// Print error & stop...
-			TheGremlinsP->Status (NULL, &step, NULL);
+			TheGremlinsP->GStatus (NULL, &step, NULL);
 			sprintf(text, "Error #%lx occurred while processing.  Gremlins at %ld.  Stopping.\n", inErr, step);
 			DbgMessage(text);
 			StubAppGremlinsOff();
@@ -1710,7 +1710,7 @@ Gremlins::Load (SessionFile& f)
  *			dia	9/1/98	Allows for NULL parameters.
  *
  *************************************************************/
-void Gremlins::Status(UInt16 *currentNumber, UInt32 *currentStep, 
+void Gremlins::GStatus(UInt16 *currentNumber, UInt32 *currentStep, 
 	UInt32 *currentUntil)
 {
 	if (currentNumber) *currentNumber = number;
@@ -1872,7 +1872,7 @@ Gremlins::Stop (void)
 		unsigned short	number;
 		unsigned long	step;
 		unsigned long	until;
-		this->Status (&number, &step, &until);
+		this->GStatus (&number, &step, &until);
 
 		if (LogGremlins ())
 		{

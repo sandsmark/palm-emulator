@@ -23,6 +23,8 @@
 #include "PreferenceMgr.h"		// Preference, kPrefKeyReportMemMgrLeaks
 #include "ROMStubs.h"
 
+/* Update for recent GCC */
+#include <cstddef>
 
 EmStream& operator >> (EmStream& inStream, EmStackFrame& outInfo);
 EmStream& operator << (EmStream& inStream, const EmStackFrame& inInfo);

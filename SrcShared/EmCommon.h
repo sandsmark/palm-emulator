@@ -49,6 +49,7 @@
 
 #include "Switches.h"
 
+#include "EmTypes.h"
 
 // ==================================================================================
 // Some very handy macros.
@@ -96,7 +97,7 @@
 // Platform-independent definitions
 // ==================================================================================
 
-#include "EmTypes.h"
+//#include "EmTypes.h"
 //#include "EmStructs.h"
 
 

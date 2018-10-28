@@ -21,6 +21,8 @@
 
 #include <ctype.h>				// isprint
 #include <stdio.h>				// sscanf, sprintf
+/* Update for GCC 4 */
+#include <string.h>
 
 // Handy macro for performing some common unsigned string compares.
 

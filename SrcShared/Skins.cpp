@@ -108,6 +108,7 @@ static const char* kElementNames[] =
 
 static const char	kGenericSkinName[] = "Generic";
 
+#if 0 //AndroidTODO: conditionalize on Android compile
 static ButtonBoundsX	kGenericButtons [] =
 {
 	{ kElement_PowerButton,		{ {   1, 274 }, {  16,  24 } } },
@@ -118,12 +119,30 @@ static ButtonBoundsX	kGenericButtons [] =
 	{ kElement_App3Button,		{ { 131, 270 }, {  32,  32 } } },
 	{ kElement_App4Button,		{ { 168, 270 }, {  32,  32 } } },
 	{ kElement_CradleButton,	{ {   0,   0 }, {   0,   0 } } },
-	{ kElement_Antenna,			{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_Antenna,		{ {   0,   0 }, {   0,   0 } } },
 	{ kElement_ContrastButton,	{ {   0,   0 }, {   0,   0 } } },
 	{ kElement_Touchscreen,		{ {  32,  32 }, { 160, 220 } } },
-	{ kElement_LCD,				{ {  32,  32 }, { 160, 160 } } },
-	{ kElement_LED,				{ {   1, 274 }, {  16,  24 } } }
+	{ kElement_LCD,			{ {  32,  32 }, { 160, 160 } } },
+	{ kElement_LED,			{ {   1, 274 }, {  16,  24 } } }
 };
+#else
+static ButtonBoundsX	kGenericButtons [] =
+{
+	{ kElement_PowerButton,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_UpButton,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_DownButton,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_App1Button,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_App2Button,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_App3Button,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_App4Button,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_CradleButton,	{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_Antenna,		{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_ContrastButton,	{ {   0,   0 }, {   0,   0 } } },
+	{ kElement_Touchscreen,		{ {   3,   3 }, { 160, 220 } } },
+	{ kElement_LCD,			{ {   3,   3 }, { 160, 160 } } },
+	{ kElement_LED,			{ {   0,   0 }, {   0,   0 } } }
+};
+#endif
 
 static RGBType	kGenericBackgroundColor	(0x7B, 0x8C, 0x5A);
 static RGBType	kGenericHighlightColor	(0x64, 0xF0, 0xDC);

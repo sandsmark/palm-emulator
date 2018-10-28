@@ -265,6 +265,11 @@ extern "C" {
 #define hostSelectorPutFile					0x0B01
 #define hostSelectorGetDirectory			0x0B02
 
+  // Host FS size support
+
+#define hostSelectorHostGetVolSize			0x0B03
+#define hostSelectorHostGetVolFree			0x0B04
+
 #define hostSelectorLastTrapNumber			0x0BFF
 
 
@@ -931,6 +936,14 @@ const char*			HostPutFile(const char* prompt, const char* defaultDir, const char
 
 const char*			HostGetDirectory(const char* prompt, const char* defaultDir)
 						HOST_TRAP(hostSelectorGetDirectory);
+/* ==================================================================== */
+/* Host FS Size Support	                         			*/
+/* ==================================================================== */
+
+long			HostGetVolSize(const char* path)
+						HOST_TRAP(hostSelectorHostGetVolSize);
+long			HostGetVolFree(const char* path)
+						HOST_TRAP(hostSelectorHostGetVolFree);
 
 #ifdef __cplusplus 
 }

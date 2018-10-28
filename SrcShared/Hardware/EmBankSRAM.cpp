@@ -25,6 +25,7 @@
 #include "Profiling.h"			// WAITSTATES_SRAM
 #include "SessionFile.h"		// WriteRAMImage
 
+#include "PHEMNativeIF.h" // PHEM debug
 
 // ===========================================================================
 //		¥ SRAM Bank Accessors
@@ -128,6 +129,9 @@ void EmBankSRAM::Initialize (RAMSizeType ramSize)
 	if (ramSize > 0)
 	{
 		gRAMBank_Size	= ramSize * 1024;
+                PHEM_Log_Msg("Allocating RAM size:");
+                PHEM_Log_Place(ramSize);
+                PHEM_Log_Place(gRAMBank_Size);
 		gRAMBank_Mask	= gRAMBank_Size - 1;
 		gRAM_Memory 	= (uint8*) Platform::AllocateMemoryClear (gRAMBank_Size);
 		gRAM_MetaMemory = (uint8*) Platform::AllocateMemoryClear (gRAMBank_Size);

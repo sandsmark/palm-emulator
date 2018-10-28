@@ -29,6 +29,8 @@
 #include "ROMStubs.h"			// ExgLibControl, DmFindDatabase, EvtEnqueueKey, EvtWakeup, DmDeleteDatabase, DmCreateDatabase...
 #include "Strings.r.h"			// kStr_CmdInstall
 
+#include "PHEMNativeIF.h"
+
 #include <algorithm>			// find
 #include <stdio.h>				// sprintf
 #include <time.h>				// strftime
@@ -222,22 +224,30 @@ ErrCode EmFileImport::LoadPalmFileList (const EmFileRefList& fileList,
 
 	newIDList.clear ();
 
+        PHEM_Log_Msg("LoadPalmFileList starting.");
 	EmFileRefList::const_iterator	iter = fileList.begin ();
+        PHEM_Log_Msg("Starting loop.");
 	while (iter != fileList.end ())
 	{
+                PHEM_Log_Msg("Getting stream.");
 		EmStreamFile	stream (*iter, kOpenExistingForRead);
+                PHEM_Log_Msg("Creating importer.");
 		EmFileImport	importer (stream, method);
 
 		while (!importer.Done () && err == errNone)
 		{
+                        PHEM_Log_Msg("Calling importer.Continue().");
 			err = importer.Continue ();
 		}
 
+                PHEM_Log_Msg("Pushing back new LocalID.");
 		newIDList.push_back (importer.GetLocalID ());
 
 		++iter;
 	}
 
+        PHEM_Log_Msg("Done, err =");
+        PHEM_Log_Place(err);
 	return err;
 }
 

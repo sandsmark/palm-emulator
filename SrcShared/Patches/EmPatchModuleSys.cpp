@@ -28,8 +28,9 @@
 #include "EmPatchMgr.h"			// PuppetString
 #include "EmPatchModule.h"		// IntlMgrAvailable
 #include "EmPatchState.h"
-#include "EmRPC.h"				// RPC::SignalWaiters
+#include "EmRPC.h"			// RPC::SignalWaiters
 #include "EmSession.h"			// GetDevice
+#include "EmApplication.h"		// Ticks per second
 #include "EmSubroutine.h"
 #include "ErrorHandling.h"		// Errors::SysFatalAlert
 #include "Hordes.h"				// Hordes::IsOn, Hordes::PostFakeEvent, Hordes::CanSwitchToApp
@@ -129,20 +130,21 @@ ProtoPatchTableEntry	gProtoSysPatchTable[] =
 	{sysTrapHwrBattery,				SysHeadpatch::HwrBattery,				NULL},
 	{sysTrapHwrDockStatus,			SysHeadpatch::HwrDockStatus,			NULL},
 	{sysTrapHwrGetROMToken, 		SysHeadpatch::HwrGetROMToken,			NULL},
-	{sysTrapHwrMemReadable, 		NULL,									SysTailpatch::HwrMemReadable},
-	{sysTrapHwrSleep,				SysHeadpatch::HwrSleep, 				SysTailpatch::HwrSleep},
-	{sysTrapPenOpen,				SysHeadpatch::PenOpen,					NULL},
+	{sysTrapHwrMemReadable, 		NULL,						SysTailpatch::HwrMemReadable},
+	{sysTrapHwrSleep,				SysHeadpatch::HwrSleep, 		SysTailpatch::HwrSleep},
+	{sysTrapPenOpen,				SysHeadpatch::PenOpen,			NULL},
 	{sysTrapPrefSetAppPreferences,	SysHeadpatch::PrefSetAppPreferences,	NULL},
-	{sysTrapSndDoCmd,				SysHeadpatch::SndDoCmd,					NULL},
-	{sysTrapSysAppExit, 			SysHeadpatch::SysAppExit,				NULL},
+	{sysTrapSndDoCmd,				SysHeadpatch::SndDoCmd,			NULL},
+	{sysTrapSysAppExit, 			SysHeadpatch::SysAppExit,			NULL},
 	{sysTrapSysAppLaunch,			SysHeadpatch::SysAppLaunch, 			NULL},
-	{sysTrapSysAppStartup,			NULL,									SysTailpatch::SysAppStartup},
+	{sysTrapSysAppStartup,			NULL,						SysTailpatch::SysAppStartup},
 	{sysTrapSysBinarySearch,		SysHeadpatch::SysBinarySearch,			SysTailpatch::SysBinarySearch},
 	{sysTrapSysEvGroupWait, 		SysHeadpatch::SysEvGroupWait,			NULL},
 	{sysTrapSysFatalAlert,			SysHeadpatch::SysFatalAlert,			NULL},
 	{sysTrapSysLaunchConsole,		SysHeadpatch::SysLaunchConsole, 		NULL},
 	{sysTrapSysSemaphoreWait,		SysHeadpatch::SysSemaphoreWait, 		NULL},
-	{sysTrapSysTaskCreate,			NULL,							 		SysTailpatch::SysTaskCreate},
+	{sysTrapSysTaskCreate,			NULL,						SysTailpatch::SysTaskCreate},
+//	{sysTrapSysTicksPerSecond,		SysHeadpatch::SysTicksPerSecond, 		NULL},
 	{sysTrapSysUIAppSwitch, 		SysHeadpatch::SysUIAppSwitch,			NULL},
 	{sysTrapTblHandleEvent,			SysHeadpatch::TblHandleEvent,			SysTailpatch::TblHandleEvent},
 	{sysTrapTimInit,				NULL,									SysTailpatch::TimInit},
@@ -1985,6 +1987,32 @@ CallROMType SysHeadpatch::SysSemaphoreWait (void)
 	return result;
 }
 
+#if 1
+/***********************************************************************
+ *
+ * FUNCTION:	SysHeadpatch::SysTicksPerSecond
+ *
+ * DESCRIPTION:	SysTicksPerSecond is called from many places to calibrate
+ *                              delays. On real hardware, the system runs at
+ *				100 ticks per second, but the emulator usually runs
+ *				significantly faster than that.
+ *
+ * PARAMETERS:	none
+ *
+ * RETURNED:	nothing
+ *
+ ***********************************************************************/
+
+CallROMType SysHeadpatch::SysTicksPerSecond(void)
+{
+	CALLED_SETUP ("UInt16", "void");
+
+	PUT_RESULT_VAL (UInt16, sysTicksPerSecond);
+
+	return kSkipROM;
+
+}
+#endif
 
 /***********************************************************************
  *

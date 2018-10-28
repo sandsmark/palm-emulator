@@ -46,6 +46,9 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <unistd.h>				// close
+/* Update for GCC 4 */
+#include <string.h>
+#include <cstddef>
 #endif
 
 #if defined(__svr4__)

@@ -833,7 +833,7 @@ const struct
 	{ 0, 0, 1, "x-major, positive x and negative y directions" }
 };
 
-static char*	kROPs[] =
+static const char*	kROPs[] =
 {
 	"0 BLACKNESS",		"DPSoon",			"DPSona",			"PSon",
 	"SDPona",			"DPon",				"PDSxnon",			"PDSaon",

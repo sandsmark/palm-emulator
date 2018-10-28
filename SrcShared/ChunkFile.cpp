@@ -17,6 +17,7 @@
 #include "Byteswapping.h"		// Canonical
 #include "Platform.h"			// ReallocMemory
 
+#include <string.h>
 
 /***********************************************************************
  *

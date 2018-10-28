@@ -163,6 +163,8 @@
 #define	sysFileCUart650 					'u650'	// Creator type for '650 UART plug-in
 #define	sysFileCVirtIrComm				'ircm'	// Creator type for IrComm virtual port plug-in.
 
+#define sysFileCVFSMgr                                          'vfsm'  // Creator type for VFSMgr.
+
 #define	sysFileTSystem						'rsrc'	// File type for Main System File
 #define	sysFileTSystemPatch				'ptch'	// File type for System resource file patches
 #define	sysFileTKernel						'krnl'	// File type for System Kernel (AMX)

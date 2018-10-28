@@ -297,9 +297,9 @@ extern EmulatorPreferences* gEmuPrefs;
 
 #define FOR_EACH_INIT_PREF(DO_TO_PREF)											\
 	DO_TO_PREF(RedirectNetLib,		bool,				(true))					\
-	DO_TO_PREF(EnableSounds,		bool,				(false))				\
-	DO_TO_PREF(CloseAction,			CloseActionType,	(kSaveAsk))				\
-	DO_TO_PREF(UserName,			string,				("Palm OS Emulator"))	\
+	DO_TO_PREF(EnableSounds,		bool,				(true))				\
+	DO_TO_PREF(CloseAction,			CloseActionType,	(kSaveNever))				\
+	DO_TO_PREF(UserName,			string,				("PHEM"))	\
 																				\
 	DO_TO_PREF(PortSerial,			EmTransportDescriptor,	(kTransportNull))	\
 	DO_TO_PREF(PortIR,				EmTransportDescriptor,	(kTransportNull))	\
@@ -309,27 +309,27 @@ extern EmulatorPreferences* gEmuPrefs;
 	DO_TO_PREF(PortSerialSocket,	string,				(""))					\
 	DO_TO_PREF(PortIRSocket,		string,				(""))					\
 																				\
-	DO_TO_PREF(ReportFreeChunkAccess,			bool,	(true))					\
-	DO_TO_PREF(ReportHardwareRegisterAccess,	bool,	(true))					\
-	DO_TO_PREF(ReportLowMemoryAccess,			bool,	(true))					\
-	DO_TO_PREF(ReportLowStackAccess,			bool,	(true))					\
-	DO_TO_PREF(ReportMemMgrDataAccess,			bool,	(true))					\
-	DO_TO_PREF(ReportMemMgrLeaks,				bool,	(true))					\
-	DO_TO_PREF(ReportMemMgrSemaphore,			bool,	(true))					\
-	DO_TO_PREF(ReportOffscreenObject,			bool,	(true))					\
-	DO_TO_PREF(ReportOverlayErrors,				bool,	(true))					\
-	DO_TO_PREF(ReportProscribedFunction,		bool,	(true))					\
-	DO_TO_PREF(ReportROMAccess,					bool,	(true))					\
-	DO_TO_PREF(ReportScreenAccess,				bool,	(true))					\
-	DO_TO_PREF(ReportSizelessObject,			bool,	(true))					\
-	DO_TO_PREF(ReportStackAlmostOverflow,		bool,	(true))					\
-	DO_TO_PREF(ReportStrictIntlChecks,			bool,	(true))					\
-	DO_TO_PREF(ReportSystemGlobalAccess,		bool,	(true))					\
-	DO_TO_PREF(ReportUIMgrDataAccess,			bool,	(true))					\
-	DO_TO_PREF(ReportUnlockedChunkAccess,		bool,	(true))					\
+	DO_TO_PREF(ReportFreeChunkAccess,			bool,	(false))					\
+	DO_TO_PREF(ReportHardwareRegisterAccess,	bool,	(false))					\
+	DO_TO_PREF(ReportLowMemoryAccess,			bool,	(false))					\
+	DO_TO_PREF(ReportLowStackAccess,			bool,	(false))					\
+	DO_TO_PREF(ReportMemMgrDataAccess,			bool,	(false))					\
+	DO_TO_PREF(ReportMemMgrLeaks,				bool,	(false))					\
+	DO_TO_PREF(ReportMemMgrSemaphore,			bool,	(false))					\
+	DO_TO_PREF(ReportOffscreenObject,			bool,	(false))					\
+	DO_TO_PREF(ReportOverlayErrors,				bool,	(false))					\
+	DO_TO_PREF(ReportProscribedFunction,		bool,	(false))					\
+	DO_TO_PREF(ReportROMAccess,					bool,	(false))					\
+	DO_TO_PREF(ReportScreenAccess,				bool,	(false))					\
+	DO_TO_PREF(ReportSizelessObject,			bool,	(false))					\
+	DO_TO_PREF(ReportStackAlmostOverflow,		bool,	(false))					\
+	DO_TO_PREF(ReportStrictIntlChecks,			bool,	(false))					\
+	DO_TO_PREF(ReportSystemGlobalAccess,		bool,	(false))					\
+	DO_TO_PREF(ReportUIMgrDataAccess,			bool,	(false))					\
+	DO_TO_PREF(ReportUnlockedChunkAccess,		bool,	(false))					\
 																				\
 	DO_TO_PREF(ReportLockedRecords,				bool,	(false))				\
-	DO_TO_PREF(ReportSysFatalAlert,				bool,	(true))					\
+	DO_TO_PREF(ReportSysFatalAlert,				bool,	(false))					\
 																				\
 	DO_TO_PREF(InterceptSysFatalAlert,			bool,	(true))					\
 	DO_TO_PREF(DialogBeep,						bool,	(false))				\
@@ -361,7 +361,7 @@ extern EmulatorPreferences* gEmuPrefs;
 	DO_TO_PREF(DebuggerSocketPort,	long,				(6414))					\
 	DO_TO_PREF(RPCSocketPort,		long,				(6415))					\
 																				\
-	DO_TO_PREF(WarnAboutSkinsDir,	bool,				(true))					\
+	DO_TO_PREF(WarnAboutSkinsDir,	bool,				(false))					\
 																				\
 	DO_TO_PREF(AskAboutStartMenu,	bool,				(true))					\
 	DO_TO_PREF(StartMenuItem,		EmFileRef,			())						\
@@ -385,8 +385,8 @@ extern EmulatorPreferences* gEmuPrefs;
 	DO_TO_PREF(Skins,				SkinNameList,		())						\
 	DO_TO_PREF(Scale,				ScaleType,			(2))					\
 	DO_TO_PREF(DimWhenInactive,		bool,				(true))					\
-	DO_TO_PREF(ShowDebugMode,		bool,				(true))					\
-	DO_TO_PREF(ShowGremlinMode,		bool,				(true))					\
+	DO_TO_PREF(ShowDebugMode,		bool,				(false))					\
+	DO_TO_PREF(ShowGremlinMode,		bool,				(false))					\
 	DO_TO_PREF(StayOnTop,			bool,				(false))				\
 																				\
 	DO_TO_PREF(WarningOff,			EmErrorHandlingOption,	(kShow))			\

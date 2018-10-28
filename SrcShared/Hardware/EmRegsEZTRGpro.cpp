@@ -27,6 +27,9 @@
 #undef NON_PORTABLE
 #include "PalmPackPop.h"
 
+/* Update for recent GCC */
+#include <cstddef>
+
 // TRGpro Defines
 #define hwrEZPortDCFInit          0x40
 #define hwrEZPortGDO_LATCH        0x08  // SPI DO_LATCH enable

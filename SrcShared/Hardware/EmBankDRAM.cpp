@@ -32,6 +32,7 @@
 #include "MetaMemory.h"			// MetaMemory
 #include "Profiling.h"			// WAITSTATES_DRAM
 
+#include <cstddef>
 
 // ---------------------------------------------------------------------------
 #pragma mark ===== Types

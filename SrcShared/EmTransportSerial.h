@@ -100,6 +100,8 @@ class EmTransportSerial : public EmTransport
 		static EmTransportSerial*	GetTransport		(const ConfigSerial&);
 		static void				GetDescriptorList		(EmTransportDescriptorList&);
 		static void				GetSerialBaudList		(BaudList&);
+                // RAI 2014: Moved from private so we can muck with it for GPS NMEA passthroug
+		EmHostTransportSerial*	fHost;
 
 	private:
 		void					HostConstruct			(void);
@@ -124,7 +126,7 @@ class EmTransportSerial : public EmTransport
 		static void				HostGetPortNameList		(PortNameList&);
 		static void				HostGetSerialBaudList	(BaudList&);
 
-		EmHostTransportSerial*	fHost;
+		//EmHostTransportSerial*	fHost;
 		ConfigSerial			fConfig;
 		Bool					fCommEstablished;
 

@@ -274,13 +274,14 @@ typedef volatile struct HwrM68328Type*	HwrM68328Ptr;
 /************************************************************************
  * LCD Controller Bits
  ************************************************************************/
+// lcdCursorXPos Register
 #define	hwr328LcdCursorXPosCtlMask			0xC000
 	#define	hwr328LcdCursorXPosCtlTrans	0x0000
 	#define	hwr328LcdCursorXPosCtlBlack	0x4000
 	#define	hwr328LcdCursorXPosCtlReverse	0x8000
-	
 #define	hwr328LcdBlinkControlEnable		0x80 
 
+// lcdPanelControl Register
 #define	hwr328LcdPanelControlBusMask		0x06
 	#define	hwr328LcdPanelControlBus1Bit	0x00
 	#define	hwr328LcdPanelControlBus2Bit	0x02

@@ -1100,7 +1100,7 @@ typedef uint8	ScrOperation;
 	FOR_NetSocketAddrType_STRUCT (DO_TO_STRUCT)					\
 
 
-#if PLATFORM_MAC
+#if PLATFORM_UNIX
 	#define INLINE_SCALAR_IMPLEMENTATION	1
 #else
 	#define INLINE_SCALAR_IMPLEMENTATION	0

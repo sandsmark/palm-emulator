@@ -13,6 +13,8 @@
 
 #include "EmCommon.h"
 #include "EmTRGSD.h"
+/* Update for GCC 4 */
+#include <string.h>
 
 /************************************************************************
  * This class handles the SPI SD controller interface used in the 

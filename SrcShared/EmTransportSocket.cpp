@@ -35,6 +35,10 @@
 #include <arpa/inet.h>			// inet_addr
 #endif
 
+/* Update for GCC 4 */
+#include <stdlib.h>
+#include <string.h>
+
 #ifndef INADDR_NONE
 #define INADDR_NONE		0xffffffff
 #endif

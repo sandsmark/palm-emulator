@@ -29,6 +29,9 @@
 #include "SessionFile.h"		// WriteHwrDBallEZType, etc.
 #include "UAE.h"				// regs, SPCFLAG_INT
 
+/* Update for recent GCC */
+#include <cstddef>
+
 #include "PalmPack.h"
 #define NON_PORTABLE
 	#include "HwrMiscFlags.h"	// hwrMiscFlagID1

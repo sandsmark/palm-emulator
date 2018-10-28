@@ -48,6 +48,7 @@ $output_vcpp = $output . "Strings.rc";
 #/* This file is generated from SrcShared/Strings.txt */
 #
 ##include <map>
+##include <cstddef>
 #
 #static std::map<int, const char*> _ResStrMap;
 #
@@ -99,6 +100,7 @@ $output_vcpp = $output . "Strings.rc";
 #/* This file is generated from SrcShared/Strings.txt */
 #
 ##include <map>
+##include <cstddef>
 #
 #static std::map<int, const char*> _ResStrMap;
 #

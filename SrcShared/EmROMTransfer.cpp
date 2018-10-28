@@ -22,6 +22,10 @@
 #include "Platform.h"				// Platform::GetMilliseconds
 #include "Strings.r.h"				// kStr_Waiting
 
+/* Update for GCC 4 */
+#include <stdlib.h>
+#include <string.h>
+
 
 /*
 	Notes on the XModem/YModem implementation used in this file:

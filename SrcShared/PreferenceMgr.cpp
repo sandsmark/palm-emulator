@@ -26,6 +26,8 @@
 
 #include <algorithm>			// find()
 #include <ctype.h>				// isdigit
+/* Update for GCC 4 */
+#include <string.h>
 
 Preferences*			gPrefs;
 EmulatorPreferences*	gEmuPrefs;
@@ -356,6 +358,9 @@ template class Preference<CloseActionType>;
 template class Preference<EmDevice>;
 template class Preference<EmErrorHandlingOption>;
 
+/* Templates needed for GCC 4 */
+template class Preference<EmTransportDescriptor>;
+template class Preference<EmDirRef>;
 
 // ----------------------------------------------------------------------
 //	Specializations of Preference class for compound types.
@@ -2562,3 +2567,10 @@ bool PrefKeysEqual (PrefKeyType key1, PrefKeyType key2)
 {
 	return _stricmp (key1, key2) == 0;
 }
+
+// Force instantiation of some necessary templates.
+template class Preference<GremlinInfo>;
+template class Preference<HordeInfo>;
+template class Preference<SlotInfoList>;
+template class Preference<EmFileRefList>;
+template class Preference<Configuration>;

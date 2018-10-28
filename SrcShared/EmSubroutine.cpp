@@ -22,6 +22,8 @@
 #include "Miscellaneous.h"		// SeparateList
 #include "Platform.h"			// Platform::AllocateMemory
 
+#include "PHEMNativeIF.h"
+
 #include <ctype.h>				// isspace
 
 
@@ -2644,6 +2646,8 @@ Err EmSubroutineCPU68K::DoCall (uint16 trapWord)
 	// recording of function entries and exits.  We want our calls to
 	// ROM functions to be as transparent as possible.
 
+        PHEM_Log_Msg("executing subroutine:");
+        PHEM_Log_Place(trapWord);
 	StDisableAllProfiling	stopper;
 
 

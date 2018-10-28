@@ -30,6 +30,8 @@
 #include "UAE.h"				// cpuop_func, etc.
 
 #include <algorithm>			// find
+/* Update for recent GCC */
+#include <cstddef>
 
 #if __profile__
 #include <Profiler.h>

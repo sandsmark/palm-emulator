@@ -49,6 +49,16 @@
 #include <time.h>
 #include <omnithread.h>
 
+// Android debugging
+#if 0
+#include <jni.h>
+#include <android/log.h>
+
+#define  LOG_TAG    "omnithread"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#endif
+
+
 #if (defined(__GLIBC__) && __GLIBC__ >= 2)
 // typedef of struct timeval and gettimeofday();
 #include <sys/time.h>
@@ -90,7 +100,6 @@
 #endif
 
 
-
 ///////////////////////////////////////////////////////////////////////////
 //
 // Mutex
@@ -123,6 +132,7 @@ omni_mutex::lock(void)
     THROW_ERRORS(err);
   }
 #else
+    //LOGI("Locking mutex.");
     THROW_ERRORS(pthread_mutex_lock(&posix_mutex));
 #endif
 }
@@ -139,6 +149,7 @@ omni_mutex::unlock(void)
   }
 #else
     THROW_ERRORS(pthread_mutex_unlock(&posix_mutex));
+    //LOGI("Mutex unlocked.");
 #endif
 }
 
@@ -168,6 +179,7 @@ omni_condition::~omni_condition(void)
 void
 omni_condition::wait(void)
 {
+    //LOGI("Waiting on condition.");
     THROW_ERRORS(pthread_cond_wait(&posix_cond, &mutex->posix_mutex));
 }
 
@@ -210,6 +222,7 @@ omni_condition::signal(void)
 void
 omni_condition::broadcast(void)
 {
+    //LOGI("Broadcasting condition.");
     THROW_ERRORS(pthread_cond_broadcast(&posix_cond));
 }
 

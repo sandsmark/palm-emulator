@@ -42,6 +42,14 @@
 #include "ErrorHandling.h"		// Errors::Initialize ();
 #include "EmPalmOS.h"			// EmPalmOS::Initialize
 
+#include "PHEMNativeIF.h"
+
+#ifndef NDEBUG
+#include <android/log.h>
+#define  LOG_TAG    "libpose-session"
+#define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#endif
+
 EmSession*	gSession;
 
 static uint32	gLastButtonEvent;
@@ -49,11 +57,11 @@ const uint32	kButtonEventThreshold = 100;
 
 #ifndef NDEBUG
 Bool	gIterating = false;
+void Dump_Suspend_State(EmSuspendState fSuspendState);
 #endif
 
 Bool	PrvCanBotherCPU	(void);
 void	PrvWakeUpCPU	(long strID);
-
 
 /*
 	Sub-system methods:
@@ -128,6 +136,7 @@ EmSession::EmSession (void) :
 	fPenQueue (),
 	fLastPenEvent (EmPoint (-1, -1), false),
 	fBootKeys (0)
+        , fstop_count(0) //AndroidTODO: remove
 {
 	fSuspendState.fAllCounters = 0;
 
@@ -462,6 +471,7 @@ void EmSession::Reset (EmResetType resetType)
 
 
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("Reset, sharedlock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -536,6 +546,7 @@ void EmSession::Reset (EmResetType resetType)
 		EmHAL::ButtonEvent (kElement_UpButton, true);
 		fBootKeys |= 1L << kElement_UpButton;
 	}
+        PHEM_Log_Msg("Reset, unlocked.");
 }
 
 
@@ -547,6 +558,7 @@ void EmSession::Save (SessionFile& f)
 {
 	// Write out the device type.
 
+        PHEM_Log_Msg("Session::Save()");
 	EmAssert (fConfiguration.fDevice.Supported ());
 	f.WriteDevice (fConfiguration.fDevice);
 
@@ -565,6 +577,7 @@ void EmSession::Save (SessionFile& f)
 	Errors::Save (f);
 
 	EmPalmOS::Save (f);
+        PHEM_Log_Msg("::Save done.");
 }
 
 
@@ -696,6 +709,10 @@ void EmSession::CreateThread (Bool suspended)
 	fSuspendState.fCounters.fSuspendByUIThread	= suspended ? 1 : 0;
 	fState						= kSuspended;
 #endif
+        PHEM_Log_Msg("EmSession::CreateThread");
+#ifndef NDEBUG
+        Dump_Suspend_State(fSuspendState);
+#endif
 }
 
 
@@ -708,19 +725,23 @@ void EmSession::DestroyThread (void)
 #if HAS_OMNI_THREAD
 	if (!fThread)
 		return;
-
+        PHEM_Log_Msg("DestroyThread, lock");
 	omni_mutex_lock	lock (fSharedLock);
 
 	fStop = true;
 	fSuspendState.fCounters.fSuspendByUIThread++;
+        PHEM_Log_Msg("EmSession::DestroyThread about to broadcast");
 	fSharedCondition.broadcast ();
 
+        PHEM_Log_Msg("EmSession::DestroyThread about to wait");
 	while (fState != kStopped)
 		fSharedCondition.wait ();
+        PHEM_Log_Msg("EmSession::DestroyThread done waiting");
 
 	// fThread thread will quit and destroy itself.
 
 	fThread = NULL;
+        PHEM_Log_Msg("DestroyThread, unlocked");
 #endif
 }
 
@@ -742,6 +763,7 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 
 	EmAssert (fThread);
 
+        PHEM_Log_Msg("SuspendThread, lock");
 	omni_mutex_lock	lock (fSharedLock);
 
 	// Set a flag for the CPU thread to find, telling it how to stop.
@@ -760,15 +782,19 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 			break;
 
 		case kStopNow:
+                        PHEM_Log_Msg("SuspendThread: stop now");
 			fSuspendState.fCounters.fSuspendByUIThread++;
 			break;
 
 		case kStopOnCycle:
+                        PHEM_Log_Msg("SuspendThread: stop on cycle");
 			fSuspendState.fCounters.fSuspendByUIThread++;
 			break;
 
 		case kStopOnSysCall:
+                        PHEM_Log_Msg("SuspendThread: stop on syscall");
 			desiredBreakOnSysCall = true;
+			fSuspendState.fCounters.fSuspendBySysCall=1;
 			break;
 	}
 
@@ -781,12 +807,16 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 
 	if (fState == kRunning)
 	{
+                PHEM_Log_Msg("SuspendThread: state running");
+                PHEM_Log_Place(fSuspendState.fAllCounters);
 		// Wake up the thread if it's sleeping.
 
 		fSleepLock.lock ();
 		fSleepCondition.broadcast ();
 		fSleepLock.unlock ();
 
+                PHEM_Log_Msg("SuspendThread: post-broadcast");
+                PHEM_Log_Place(fSuspendState.fAllCounters);
 		// Wait for it to stop.
 		// !!! Do a timed wait in case we never reach the desired stop point?
 
@@ -818,9 +848,22 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 			// longer thinks it needs to halt on that condition.
 
 			fBreakOnSysCall	= desiredBreakOnSysCall;
+                        PHEM_Log_Msg("SuspendThread: second pre-broadcast");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 			fSharedCondition.broadcast ();
+                        PHEM_Log_Msg("SuspendThread: second post-broadcast");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 
 			fSharedCondition.wait ();
+#if 0
+                        // calc absolute time to wait until:
+                        unsigned long   sec;
+                        unsigned long   nanosec;
+                        omni_thread::get_time (&sec, &nanosec, 1, 250 * 1000 * 1000);
+			fSharedCondition.timedwait(sec,nanosec); // 250,000,000 nanoseconds is 250 milliseconds
+#endif
+                        PHEM_Log_Msg("SuspendThread: post-wait");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 //			LogAppendMsg ("EmSession::SuspendThread (waking): fState = %ld", (long) fState);
 
 #ifndef NDEBUG
@@ -838,6 +881,7 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 			}
 #endif
 		}
+                PHEM_Log_Msg("SuspendThread: post-while loop");
 	}
 
 #else
@@ -854,15 +898,22 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 			break;
 
 		case kStopNow:
+                        PHEM_Log_Msg("SuspendThread: second stop now");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 			fSuspendState.fCounters.fSuspendByUIThread++;
 			break;
 
 		case kStopOnCycle:
+                        PHEM_Log_Msg("SuspendThread: second stop cycle");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 			fSuspendState.fCounters.fSuspendByUIThread++;
 			break;
 
 		case kStopOnSysCall:
+                        PHEM_Log_Msg("SuspendThread: second stop syscall");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 			fBreakOnSysCall = true;
+			fSuspendState.fCounters.fSuspendBySysCall=0;
 			break;
 	}
 
@@ -903,12 +954,16 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 
 		case kStopNow:
 			// Stopped on either "suspended" or "blocked" is OK.
+                        PHEM_Log_Msg("SuspendThread: stopped now");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 			result = true;
 			break;
 
 		case kStopOnCycle:
 			// Only "stopped on suspended" is OK
 			result = (fState == kSuspended);
+                        PHEM_Log_Msg("SuspendThread: stopped in cycle");
+                        PHEM_Log_Place(fSuspendState.fAllCounters);
 			break;
 
 		case kStopOnSysCall:
@@ -916,8 +971,13 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 			result = (fState == kSuspended) && fSuspendState.fCounters.fSuspendBySysCall;
 			if (result)
 			{
+                                PHEM_Log_Msg("SuspendThread: stopped in syscall");
+                                PHEM_Log_Place(fSuspendState.fAllCounters);
 				fSuspendState.fCounters.fSuspendByUIThread++;
-			}
+			} else {
+                                PHEM_Log_Msg("SuspendThread: not stopped in syscall?");
+                                PHEM_Log_Place(fSuspendState.fAllCounters);
+                        }
 			break;
 	}
 
@@ -932,6 +992,11 @@ Bool EmSession::SuspendThread (EmStopMethod how)
 
 //	LogAppendMsg ("EmSession::SuspendThread (exit): fState = %ld", (long) fState);
 
+         PHEM_Log_Msg("Unlocked, Stopping in state:");
+#ifndef NDEBUG
+         Dump_Suspend_State(fSuspendState);
+#endif
+         PHEM_Log_Place(fSuspendState.fAllCounters);
 	return result;
 }
 
@@ -945,6 +1010,7 @@ void EmSession::ResumeThread (void)
 #if HAS_OMNI_THREAD
 	EmAssert (fThread);
 
+        PHEM_Log_Msg("ResumeThread, lock");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -952,11 +1018,13 @@ void EmSession::ResumeThread (void)
 
 	if (fSuspendState.fCounters.fSuspendByUIThread > 0)
 	{
+                //PHEM_Log_Msg("ResumeThread: decrementing UI thread.");
 		--fSuspendState.fCounters.fSuspendByUIThread;
 
 		if (fSuspendState.fCounters.fSuspendByUIThread == 0 &&
 			fSuspendState.fCounters.fSuspendByExternal == 0)
 		{
+                        //PHEM_Log_Msg("ResumeThread: clearing syscall.");
 			fSuspendState.fCounters.fSuspendBySysCall = 0;
 		}
 
@@ -966,15 +1034,21 @@ void EmSession::ResumeThread (void)
 			// Don't change the state if it's kBlockedOnUI.
 			if (fState == kSuspended)
 			{
+                                PHEM_Log_Msg("ResumeThread: back to running.");
 				fState = kRunning;
-			}
+			} else {
+                            PHEM_Log_Msg("ResumeThread: blocked on UI?.");
+                        }
 		}
 
+                PHEM_Log_Msg("Resume before broadcast:");
+                //Dump_Suspend_State(fSuspendState);
 		fSharedCondition.broadcast ();
 #endif
 	}
 
 //	LogAppendMsg ("EmSession::ResumeThread (exit): fState = %ld", (long) fState);
+        PHEM_Log_Msg("ResumeThread, unlocked");
 }
 
 
@@ -1021,9 +1095,11 @@ Bool EmSession::InCPUThread (void) const
 EmSessionState EmSession::GetSessionState (void) const
 {
 #if HAS_OMNI_THREAD
+	PHEM_Log_Msg("GetSessionState, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
+	PHEM_Log_Msg("GetSessionState, unlocked.");
 	return fState;
 }
 
@@ -1035,6 +1111,7 @@ EmSessionState EmSession::GetSessionState (void) const
 EmSuspendState EmSession::GetSuspendState (void) const
 {
 #if HAS_OMNI_THREAD
+	PHEM_Log_Msg("GetSuspendState, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 
 	if (this->InCPUThread ())
@@ -1043,6 +1120,7 @@ EmSuspendState EmSession::GetSuspendState (void) const
 		EmAssert ((fNestLevel == 0 && fState != kRunning) || (fNestLevel > 0 && fState == kRunning));
 #endif
 
+	PHEM_Log_Msg("GetSuspendState, unlocked.");
 	return fSuspendState;
 }
 
@@ -1054,6 +1132,7 @@ EmSuspendState EmSession::GetSuspendState (void) const
 void EmSession::SetSuspendState (const EmSuspendState& s)
 {
 #if HAS_OMNI_THREAD
+	PHEM_Log_Msg("SetSuspendState, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 
 	if (this->InCPUThread ())
@@ -1063,6 +1142,7 @@ void EmSession::SetSuspendState (const EmSuspendState& s)
 #endif
 
 	fSuspendState = s;
+	PHEM_Log_Msg("SetSuspendState, unlocked.");
 }
 
 
@@ -1153,6 +1233,7 @@ void EmSession::ExecuteIncremental (void)
 void EmSession::ExecuteSubroutine (void)
 {
 #if HAS_OMNI_THREAD
+	PHEM_Log_Msg("ExecuteSubroutine, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -1183,6 +1264,7 @@ void EmSession::ExecuteSubroutine (void)
 			EmValueChanger<int>	oldNestLevel (fNestLevel, fNestLevel + 1);
 
 #if HAS_OMNI_THREAD
+			PHEM_Log_Msg("Exec sub, pre-broadcast.");
 			fSharedCondition.broadcast ();
 
 			omni_mutex_unlock	unlock (fSharedLock);
@@ -1209,6 +1291,16 @@ void EmSession::ExecuteSubroutine (void)
 				Could happen.  Let it make this function exit.
 		*/
 
+#ifndef NDEBUG
+                LOGI("Exec sub, ui: %d, ex: %d, tim: %d, sysc: %d, deb: %d, sr: %d",
+			fSuspendState.fCounters.fSuspendByUIThread,
+			fSuspendState.fCounters.fSuspendByExternal,
+			fSuspendState.fCounters.fSuspendByTimeout,
+			fSuspendState.fCounters.fSuspendBySysCall,
+			fSuspendState.fCounters.fSuspendByDebugger,
+			fSuspendState.fCounters.fSuspendBySubroutineReturn);
+#endif
+			
 #ifndef NDEBUG
 		if (fSuspendState.fCounters.fSuspendByUIThread)
 		{
@@ -1256,6 +1348,7 @@ void EmSession::ExecuteSubroutine (void)
 	else
 		EmAssert ((fNestLevel == 0 && fState != kRunning) || (fNestLevel > 0 && fState == kRunning));
 
+	PHEM_Log_Msg("Exec sub, second pre-broadcast.");
 	fSharedCondition.broadcast ();
 #endif
 
@@ -1440,11 +1533,14 @@ Bool EmSession::ExecuteSpecial (Bool checkForResetOnly)
 Bool EmSession::CheckForBreak (void)
 {
 #if HAS_OMNI_THREAD
+	//PHEM_Log_Msg("CheckForBreak, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
-	if (fSuspendState.fAllCounters == 0)
+	if (fSuspendState.fAllCounters == 0) {
+	        //PHEM_Log_Msg("CheckForBreak unlocked, early.");
 		return false;
+        }
 
 	// If nested, ignore fSuspendByExternal.  If we're nested and it's
 	// non-zero, then that's because someone just made a HostControl call to
@@ -1464,9 +1560,11 @@ Bool EmSession::CheckForBreak (void)
 
 		fSuspendState.fCounters.fSuspendByExternal = old;
 
+	        //PHEM_Log_Msg("CheckForBreak unlocked, nested.");
 		return result;
 	}
 
+	//PHEM_Log_Msg("CheckForBreak, unlocked.");
 	return fSuspendState.fAllCounters != 0;
 }
 
@@ -1482,6 +1580,7 @@ Bool EmSession::CheckForBreak (void)
 void EmSession::CallCPU (void)
 {
 #if HAS_OMNI_THREAD
+	PHEM_Log_Msg("CallCPU, lock.");
 	omni_mutex_lock					lock (fSharedLock);
 #endif
 
@@ -1489,6 +1588,7 @@ void EmSession::CallCPU (void)
 
 #if HAS_OMNI_THREAD
 	omni_mutex_unlock				unlock (fSharedLock);
+	PHEM_Log_Msg("CallCPU, unlocked.");
 #endif
 
 	EmAssert (fCPU);
@@ -1517,8 +1617,10 @@ EmDlgItemID EmSession::BlockOnDialog (EmDlgThreadFn fn, const void* parameters)
 	EmAssert (this->InCPUThread ());
 	EmAssert (gDocument);
 
+	PHEM_Log_Msg("BlockOnDialog, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 
+        //PHEM_Log_Msg("BlockOnDialog");
 	EmDlgItemID	result = kDlgItemNone;
 
 	gDocument->ScheduleDialog (fn, parameters, result);
@@ -1530,24 +1632,33 @@ EmDlgItemID EmSession::BlockOnDialog (EmDlgThreadFn fn, const void* parameters)
 
 		// Broadcast the change in fState.
 
+	        PHEM_Log_Msg("Block on dialog, pre-broadcast.");
 		fSharedCondition.broadcast ();
 
+                //PHEM_Log_Msg("Looping...");
 		while (result == kDlgItemNone && !fStop)
 		{
+                        //PHEM_Log_Msg("loop, fState=");
+                        //PHEM_Log_Place(fState);
 //			LogAppendMsg ("EmSession::RunDialog (middle): fState = %ld", (long) fState);
 			EmAssert (fState == kBlockedOnUI);
+	                PHEM_Log_Msg("Block on dialog, pre-wait.");
 			fSharedCondition.wait ();
 		}
 	}
 
 	// Broadcast the change in fState.
 
+        PHEM_Log_Msg("Block on dialog, second pre-broadcast.");
 	fSharedCondition.broadcast ();
 
 //	LogAppendMsg ("EmSession::RunDialog (exit): fState = %ld", (long) fState);
 
 	// !!! Throw an exception if fDialogResult == -1.
+        //PHEM_Log_Msg("BlockOnDialog returning");
+        //PHEM_Log_Place(result);
 
+	PHEM_Log_Msg("BlockOnDialog, first unlock.");
 	return result;
 
 #else
@@ -1572,6 +1683,7 @@ EmDlgItemID EmSession::BlockOnDialog (EmDlgThreadFn fn, const void* parameters)
 
 //	LogAppendMsg ("EmSession::RunDialog (exit): fState = %ld", (long) fState);
 
+	PHEM_Log_Msg("BlockOnDialog, unlock.");
 	return result;
 
 #endif
@@ -1587,8 +1699,10 @@ EmDlgItemID EmSession::BlockOnDialog (EmDlgThreadFn fn, const void* parameters)
 #if HAS_OMNI_THREAD
 void EmSession::UnblockDialog (void)
 {
+        PHEM_Log_Msg("Unblock dialog, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 	fSharedCondition.broadcast ();
+        PHEM_Log_Msg("Unblock dialog, unlocked.");
 }
 #endif
 
@@ -1795,11 +1909,15 @@ void PrvWakeUpCPU (long strID)
 	// then that trap will never get called.  By calling EvtWakeup now,
 	// we'll wake up the Palm device from its nap.
 
+        PHEM_Log_Msg("Waking CPU.");
 	EmSessionStopper	stopper (gSession, kStopOnSysCall);
 
+        PHEM_Log_Msg("PrvWakeUpCPU got stopper...");
 	if (stopper.Stopped ())
 	{
-		Errors::ReportIfPalmError (strID, ::EvtWakeup ());
+             PHEM_Log_Msg("Doing wakeup.");
+	     Errors::ReportIfPalmError (strID, ::EvtWakeup ());
+             PHEM_Log_Msg("Done wakeup.");
 	}
 }
 
@@ -1842,9 +1960,11 @@ EmDevice EmSession::GetDevice (void)
 Bool EmSession::GetBreakOnSysCall (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("GetBreakOnSysCall, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
+        PHEM_Log_Msg("GetBreakOnSysCall, unlock.");
 	return fBreakOnSysCall;
 }
 
@@ -1895,6 +2015,7 @@ void EmSession::SetNeedPostLoad (Bool newValue)
 void EmSession::ScheduleSuspendException (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendException, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -1902,12 +2023,14 @@ void EmSession::ScheduleSuspendException (void)
 
 	EmAssert (fCPU);
 	fCPU->CheckAfterCycle ();
+        PHEM_Log_Msg("ScheduleSuspendException, unlock.");
 }
 
 
 void EmSession::ScheduleSuspendError (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendError, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -1915,26 +2038,30 @@ void EmSession::ScheduleSuspendError (void)
 
 	EmAssert (fCPU);
 	fCPU->CheckAfterCycle ();
+        PHEM_Log_Msg("ScheduleSuspendError, unlock.");
 }
 
 
 void EmSession::ScheduleSuspendExternal (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendExternal, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
-
+        //PHEM_Log_Msg("EmSession::ScheduleSuspendExternal (syscall)");
 	fSuspendState.fCounters.fSuspendByExternal++;
 	fSuspendState.fCounters.fSuspendBySysCall = 1;
 
 	EmAssert (fCPU);
 	fCPU->CheckAfterCycle ();
+        PHEM_Log_Msg("ScheduleSuspendExternal, unlock.");
 }
 
 
 void EmSession::ScheduleSuspendTimeout (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendTimeout, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -1942,25 +2069,30 @@ void EmSession::ScheduleSuspendTimeout (void)
 
 	EmAssert (fCPU);
 	fCPU->CheckAfterCycle ();
+        PHEM_Log_Msg("ScheduleSuspendTimeout, unlock.");
 }
 
 
 void EmSession::ScheduleSuspendSysCall (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendSysCall, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
+        //PHEM_Log_Msg("EmSession::ScheduleSuspendSysCall");
 	fSuspendState.fCounters.fSuspendBySysCall = 1;
 
 	EmAssert (fCPU);
 	fCPU->CheckAfterCycle ();
+        PHEM_Log_Msg("ScheduleSuspendSysCall, unlock.");
 }
 
 
 void EmSession::ScheduleSuspendSubroutineReturn (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendSubroutineReturn, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -1968,12 +2100,14 @@ void EmSession::ScheduleSuspendSubroutineReturn (void)
 
 	EmAssert (fCPU);
 	fCPU->CheckAfterCycle ();
+        PHEM_Log_Msg("ScheduleSuspendSubroutineReturn, unlock.");
 }
 
 
 void EmSession::ScheduleResumeExternal (void)
 {
 #if HAS_OMNI_THREAD
+        PHEM_Log_Msg("ScheduleSuspendExternal, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 #endif
 
@@ -1984,6 +2118,7 @@ void EmSession::ScheduleResumeExternal (void)
 	{
 		fSuspendState.fCounters.fSuspendByExternal--;
 	}
+        PHEM_Log_Msg("ScheduleSuspendExternal, unlock.");
 }
 
 
@@ -2264,6 +2399,40 @@ void EmSession::RunStatic (void* arg)
 
 #endif
 
+#ifndef NDEBUG
+void Dump_Suspend_State(EmSuspendState fSuspendState) {
+   LOGI("ac: %lx ui: %d db: %d ex: %d to: %d sc: %d sr:%d",
+                     fSuspendState.fAllCounters,
+                     fSuspendState.fCounters.fSuspendByUIThread,
+                     fSuspendState.fCounters.fSuspendByDebugger,
+                     fSuspendState.fCounters.fSuspendByExternal,
+                     fSuspendState.fCounters.fSuspendByTimeout,
+                     fSuspendState.fCounters.fSuspendBySysCall,
+                     fSuspendState.fCounters.fSuspendBySubroutineReturn);
+#if 0
+   PHEM_Log_Msg("fAllCounters:");
+   PHEM_Log_Hex(fSuspendState.fAllCounters);
+
+   PHEM_Log_Msg("fSuspendByUIThread:");
+   PHEM_Log_Place(fSuspendState.fCounters.fSuspendByUIThread);
+
+   PHEM_Log_Msg("fSuspendByDebugger:");
+   PHEM_Log_Place(fSuspendState.fCounters.fSuspendByDebugger);
+
+   PHEM_Log_Msg("fSuspendByExternal:");
+   PHEM_Log_Place(fSuspendState.fCounters.fSuspendByExternal);
+
+   PHEM_Log_Msg("fSuspendByTimeout:");
+   PHEM_Log_Place(fSuspendState.fCounters.fSuspendByTimeout);
+
+   PHEM_Log_Msg("fSuspendBySysCall:");
+   PHEM_Log_Place(fSuspendState.fCounters.fSuspendBySysCall);
+
+   PHEM_Log_Msg("fSuspendBySubroutineReturn:");
+   PHEM_Log_Place(fSuspendState.fCounters.fSuspendBySubroutineReturn);
+#endif
+}
+#endif
 
 // ---------------------------------------------------------------------------
 //		¥ EmSession::Run
@@ -2274,9 +2443,14 @@ void EmSession::RunStatic (void* arg)
 void EmSession::Run ()
 {
 	EmAssert (fCPU);
+        unsigned long count = 0;
+        bool was_suspended = false;
+
+        PHEM_Bind_CPU_Thread(); // bind to JVM so we can make JNI calls
 
 	// Acquire the lock to the shared variables so that we can check fState.
 
+        PHEM_Log_Msg("Run, lock.");
 	omni_mutex_lock	lock (fSharedLock);
 
 	// Loop until we're asked to stop.
@@ -2287,6 +2461,7 @@ void EmSession::Run ()
 	{
 		while (!fStop)
 		{
+                        was_suspended=false;
 //			LogAppendMsg ("EmSession::Run (top outer loop): fState = %ld", (long) fState);
 
 			// Block while we're suspended.  We set fState to kSuspended so
@@ -2308,8 +2483,11 @@ void EmSession::Run ()
 
 			if (fSuspendState.fAllCounters)
 			{
+                                was_suspended = true;
 				while (this->IsNested () || (fSuspendState.fAllCounters && !fStop))
 				{
+                                        //PHEM_Log_Msg("Top of loop.");
+					//Dump_Suspend_State(fSuspendState);
 //					LogAppendMsg ("EmSession::Run (top inner loop): fState = %ld", (long) fState);
 
 					// If we were asked to start, our state will have been set to kRunning.
@@ -2319,12 +2497,17 @@ void EmSession::Run ()
 					if (!this->IsNested ())
 					{
 						fState = kSuspended;
-					}
+					} else {
+                                          //PHEM_Log_Msg("Nested...");
+                                        }
 
 					fSharedCondition.broadcast ();
 
+                                        PHEM_Log_Msg("Run waiting on fSharedCondition.");
 					fSharedCondition.wait ();
+                                        PHEM_Log_Msg("Run done waiting on fSharedCondition.");
 				}
+                                PHEM_Log_Msg("Run out of while loop.");
 
 //				LogAppendMsg ("EmSession::Run (after inner loop): fState = %ld", (long) fState);
 
@@ -2342,10 +2525,14 @@ void EmSession::Run ()
 
 			// We're no longer suspended.  Release our shared globals.
 
+                        PHEM_Log_Msg("Run, unocking shared...");
 			fSharedLock.unlock ();
 
 			// Execute the "fetch an opcode and emulate it" loop.  This
 			// function returns only if requested or an error occurs.
+                        if (was_suspended) {
+                          PHEM_Log_Msg("Invoking CPU after suspend.");
+                        }
 
 			try
 			{
@@ -2365,6 +2552,7 @@ void EmSession::Run ()
 				EmAssert (false);
 			}
 
+                        PHEM_Log_Msg("Run, Locking shared...");
 			fSharedLock.lock ();
 
 //			LogAppendMsg ("EmSession::Run (after CallCPU): fState = %ld", (long) fState);
@@ -2384,7 +2572,12 @@ void EmSession::Run ()
 	// fSharedLock is locked
 
 	fState = kStopped;
+        PHEM_Log_Msg("Run ending, broadcast.");
 	fSharedCondition.broadcast ();
+        PHEM_Log_Msg("Run ending.");
+
+        PHEM_Unbind_CPU_Thread(); // clean up after ourselves
+        PHEM_Log_Msg("Run unlocked.");
 }
 
 #endif
@@ -2403,7 +2596,11 @@ EmSessionStopper::EmSessionStopper (EmSession* cpu, EmStopMethod how) :
 {
 	if (fSession)
 	{
+                fSession->fstop_count++;
+                PHEM_Log_Msg("Stopper, count:");
+                PHEM_Log_Place(fSession->fstop_count);
 		fStopped = fSession->SuspendThread (how);
+                PHEM_Log_Msg("Suspended.");
 	}
 }
 
@@ -2416,7 +2613,11 @@ EmSessionStopper::~EmSessionStopper (void)
 {
 	if (fSession && fStopped)
 	{
+                fSession->fstop_count--;
+                PHEM_Log_Msg("~Stopper, count:");
+                PHEM_Log_Place(fSession->fstop_count);
 		fSession->ResumeThread ();
+                PHEM_Log_Msg("Resumed.");
 	}
 }
 

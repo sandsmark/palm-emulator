@@ -25,6 +25,7 @@
 #include "StringData.h"			// virtual key descriptions
 
 #include <ctype.h>				// isprint
+#include <cstddef>
 
 //#define LOG_TO_TRACE
 

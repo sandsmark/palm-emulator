@@ -27,6 +27,8 @@
 #include "Startup.h"			// Startup::NewHorde
 #include "Strings.r.h"			// kStr_CmdClose, etc.
 
+#include "PHEMNativeIF.h"
+
 #if HAS_PROFILING
 #include "Profiling.h"			// ProfileStart, ProfileStop, ProfileDump
 #endif
@@ -214,6 +216,7 @@ EmDocument* EmDocument::DoOpen (const EmFileRef& file)
 	try
 	{
 		// Open the old session.
+                PHEM_Log_Msg("Opening old session.");
 
 		doc->fSession = new EmSession;
 		doc->fFile = file;					// !!! Actually, this is redundant with EmSession's.
@@ -227,6 +230,7 @@ EmDocument* EmDocument::DoOpen (const EmFileRef& file)
 
 		hordesIsOn = Hordes::IsOn ();
 
+                PHEM_Log_Msg("CreateThread?");
 		doc->fSession->CreateThread (false);	// !!! Created here, but destroyed in EmSession::~EmSession!
 
 		// Patch up anything for Hordes.
@@ -235,6 +239,7 @@ EmDocument* EmDocument::DoOpen (const EmFileRef& file)
 
 		// Save the newly created configuration for next time.
 
+                PHEM_Log_Msg("Saving to pref:last");
 		{
 			Preference<Configuration>	pref (kPrefKeyLastConfiguration);
 			pref = doc->fSession->GetConfiguration ();
@@ -242,22 +247,26 @@ EmDocument* EmDocument::DoOpen (const EmFileRef& file)
 
 		// Save the last-opened session file for next time.
 
+                PHEM_Log_Msg("Saving file to pref:last");
 		{
 			Preference<EmFileRef>	pref (kPrefKeyLastPSF);
 			pref = file;
 		}
 
 		// Update the session MRU list.
+                PHEM_Log_Msg("Updating MRU");
 
 		gEmuPrefs->UpdateRAMMRU (file);
 	}
 	catch (...)
 	{
+                PHEM_Log_Msg("Got Exception!!");
 		delete doc;
 		throw;
 	}
 
 	// If we got here, then everything worked.  Open a window on the session.
+        PHEM_Log_Msg("Opening window");
 
 	doc->PrvOpenWindow ();
 
@@ -271,6 +280,7 @@ EmDocument* EmDocument::DoOpen (const EmFileRef& file)
 		EmDlg::GremlinControlOpen ();
 	}
 
+        PHEM_Log_Msg("returning doc");
 	return doc;
 }
 
@@ -562,19 +572,23 @@ Bool EmDocument::HandleSaveTo (const EmFileRef& destRef)
 
 	// Suspend the session so that we can save its data.
 
+        PHEM_Log_Msg("Stopping session...");
 	EmSessionStopper	stopper (fSession, kStopNow);
 
 	// Have the session save itself.
 
+        PHEM_Log_Msg("Actually saving sesssion...");
 	const Bool kUpdateFileRef = true;
 	fSession->Save (destRef, kUpdateFileRef);
 
 	// Remember that we are now associated with this file.
 
+        PHEM_Log_Msg("Associating...");
 	fFile = destRef;
 
 	// Save the last-saved session file for next time.
 
+        PHEM_Log_Msg("Saving pref...");
 	Preference<EmFileRef>	pref (kPrefKeyLastPSF);
 	pref = destRef;
 
@@ -584,6 +598,7 @@ Bool EmDocument::HandleSaveTo (const EmFileRef& destRef)
 
 	// Return that we saved the file.
 
+        PHEM_Log_Msg("HandleSaveTo Done.");
 	return true;
 }
 

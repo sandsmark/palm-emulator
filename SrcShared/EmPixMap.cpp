@@ -16,6 +16,8 @@
 
 #include "Platform.h"			// Platform::AllocateMemory
 
+#include <string.h>
+
 /*
 	EmPixMap is a simple class for managing pixmaps (multi-bpp bitmap)
 	in a cross-platform fashion.
@@ -100,6 +102,7 @@ static EmPixMapDepth	PrvGetDepth		(EmPixMapFormat);
 	DO_TO_FORMAT (2)					\
 	DO_TO_FORMAT (4)					\
 	DO_TO_FORMAT (8)					\
+	DO_TO_FORMAT (16RGB565)				\
 	DO_TO_FORMAT (24RGB)				\
 	DO_TO_FORMAT (24BGR)				\
 	DO_TO_FORMAT (32ARGB)				\
@@ -118,6 +121,7 @@ static EmPixMapDepth	PrvGetDepth		(EmPixMapFormat);
 	DO_TO_PAIR (fmt, 2)							\
 	DO_TO_PAIR (fmt, 4)							\
 	DO_TO_PAIR (fmt, 8)							\
+	DO_TO_PAIR (fmt, 16RGB565)						\
 	DO_TO_PAIR (fmt, 24RGB)						\
 	DO_TO_PAIR (fmt, 24BGR)						\
 	DO_TO_PAIR (fmt, 32ARGB)					\
@@ -131,6 +135,7 @@ static EmPixMapDepth	PrvGetDepth		(EmPixMapFormat);
 	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 2)		\
 	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 4)		\
 	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 8)		\
+	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 16RGB565)	\
 	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 24RGB)	\
 	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 24BGR)	\
 	FOR_EACH_FORMAT_PAIR_0 (DO_TO_PAIR, 32ARGB)	\
@@ -143,6 +148,28 @@ FOR_EACH_FORMAT_PAIR (DECLARE_CONVERTER)
 
 
 // Macros used for accessing and converting/copying pixels.
+
+// Note: we do 'bit extension' here - for example, if the 5-bit
+// red value is 'vwxyz' then the 8-bit red value will be
+// 'vwxyzvwx'. (In other words, we repeat the top three bits at
+// the bottom.) If we didn't - if, say, we left those 'bottom' bits
+// as zeros - it would darken the image. Similarly, if we set them
+// to all ones, it would brighten the image. Repeating the bits
+// keeps the color balance the same. (And note, a 16-bit all-ones
+// value maps to a 24-bit all-ones, and similarly for all-zeroes.)
+#define RED_16_565_MASK   0xF800
+#define GREEN_16_565_MASK 0x7E0
+#define BLUE_16_565_MASK  0x1F
+
+#define GET_16RGB565(srcPtr, r, g, b, a)   \
+        r = ((*(uint16 *)srcPtr) & RED_16_565_MASK) >> 8; \
+        r = r | (r >> 5); \
+        g = ((*(uint16 *)srcPtr) & GREEN_16_565_MASK) >> 3; \
+        g = g | (g >> 6); \
+        b = ((*(uint16 *)srcPtr) & BLUE_16_565_MASK) << 3; \
+        b = b | (b >> 5); \
+	a = 0; \
+        srcPtr+=2;
 
 #define GET_24RGB(srcPtr, r, g, b, a)	\
 	r = *srcPtr++;						\
@@ -185,6 +212,9 @@ FOR_EACH_FORMAT_PAIR (DECLARE_CONVERTER)
 	r = *srcPtr++;						\
 	a = *srcPtr++;
 
+#define PUT_16RGB565(destPtr, r, g, b, a) \
+  *(uint16 *)destPtr = ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | (b >> 3); \
+  destPtr+=2;
 
 #define PUT_24RGB(destPtr, r, g, b, a)	\
 	*destPtr++ = r;						\
@@ -931,6 +961,7 @@ EmPixMap::ChangeTone (int32 percent, EmCoord firstLine, EmCoord lastLine)
 
 				switch (format)
 				{
+					case kPixMapFormat16RGB565:	GET_16RGB565 (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24RGB:	GET_24RGB (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24BGR:	GET_24BGR (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat32ARGB:	GET_32ARGB (pixPtr, r, g, b, a);	break;
@@ -949,6 +980,7 @@ EmPixMap::ChangeTone (int32 percent, EmCoord firstLine, EmCoord lastLine)
 
 				switch (format)
 				{
+					case kPixMapFormat16RGB565:	pixPtr -= 2;	PUT_16RGB565 (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24RGB:	pixPtr -= 3;	PUT_24RGB (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24BGR:	pixPtr -= 3;	PUT_24BGR (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat32ARGB:	pixPtr -= 4;	PUT_32ARGB (pixPtr, r, g, b, a);	break;
@@ -1073,6 +1105,7 @@ EmPixMap::ConvertToColor (int type, EmCoord firstLine, EmCoord lastLine)
 
 				switch (format)
 				{
+					case kPixMapFormat16RGB565:	GET_16RGB565 (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24RGB:	GET_24RGB (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24BGR:	GET_24BGR (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat32ARGB:	GET_32ARGB (pixPtr, r, g, b, a);	break;
@@ -1088,6 +1121,7 @@ EmPixMap::ConvertToColor (int type, EmCoord firstLine, EmCoord lastLine)
 
 				switch (format)
 				{
+					case kPixMapFormat16RGB565:	pixPtr -= 2;	PUT_16RGB565 (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24RGB:	pixPtr -= 3;	PUT_24RGB (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat24BGR:	pixPtr -= 3;	PUT_24BGR (pixPtr, r, g, b, a);		break;
 					case kPixMapFormat32ARGB:	pixPtr -= 4;	PUT_32ARGB (pixPtr, r, g, b, a);	break;
@@ -1194,7 +1228,7 @@ EmPixMap::ConvertToFormat	(EmPixMapFormat destFormat)
  *				destRect - area within dest to where the pixels will be
  *					copied.
  *
- *				srcRect - area within src fro where the pixels will be
+ *				srcRect - area within src from where the pixels will be
  *					copied.
  *
  * RETURNED:	Nothing.
@@ -1273,7 +1307,7 @@ EmPixMap::CopyRect	(EmPixMap& dest, const EmPixMap& src,
 
 	if (destRect != srcRect)
 	{
-		// Now scale up.  The pixels have been copied in 8-, 24- or
+		// Now scale up.  The pixels have been copied in 8-, 16-, 24- or
 		// 32-bit format to the upper-left of the dest pixmap.  Expand
 		// that guy both horizontally and vertically.  In order to not
 		// smash the pixels already there (we're converting the dest
@@ -1305,6 +1339,20 @@ EmPixMap::CopyRect	(EmPixMap& dest, const EmPixMap& src,
 					*--destPtr1 = *--destPtr2 = c1;
 				}
 			}
+			else if (destDepth == 16)
+			{
+				while ((xx -= 2) >= 0)
+				{
+					uint8	c1	= *--srcPtr;
+					uint8	c2	= *--srcPtr;
+
+					*--destPtr1 = *--destPtr2 = c1;
+					*--destPtr1 = *--destPtr2 = c2;
+
+					*--destPtr1 = *--destPtr2 = c1;
+					*--destPtr1 = *--destPtr2 = c2;
+				}
+                        }
 			else if (destDepth == 24)
 			{
 				while ((xx -= 3) >= 0)
@@ -1909,6 +1957,11 @@ void PrvConvert1To8 (const ScanlineParms& parms)
 	}
 }
 
+void PrvConvert1To16RGB565 (const ScanlineParms& parms)
+{
+	STD_INDEX_TO_DIRECT_CONVERT(1, 16RGB565)
+}
+
 void PrvConvert1To24RGB (const ScanlineParms& parms)
 {
 	STD_INDEX_TO_DIRECT_CONVERT(1, 24RGB)
@@ -1988,6 +2041,11 @@ void PrvConvert2To8 (const ScanlineParms& parms)
 	}
 }
 
+void PrvConvert2To16RGB565 (const ScanlineParms& parms)
+{
+	STD_INDEX_TO_DIRECT_CONVERT(2, 16RGB565)
+}
+
 void PrvConvert2To24RGB (const ScanlineParms& parms)
 {
 	STD_INDEX_TO_DIRECT_CONVERT(2, 24RGB)
@@ -2061,6 +2119,11 @@ void PrvConvert4To8 (const ScanlineParms& parms)
 		if (xx++ < right)
 			*destPtr++ = p >> 0;
 	}
+}
+
+void PrvConvert4To16RGB565 (const ScanlineParms& parms)
+{
+	STD_INDEX_TO_DIRECT_CONVERT(4, 16RGB565)
 }
 
 void PrvConvert4To24RGB (const ScanlineParms& parms)
@@ -2157,6 +2220,11 @@ void PrvConvert8To8 (const ScanlineParms& parms)
 	STD_NO_CONVERT(8)
 }
 
+void PrvConvert8To16RGB565 (const ScanlineParms& parms)
+{
+	STD_INDEX_TO_DIRECT_CONVERT(8, 16RGB565)
+}
+
 void PrvConvert8To24RGB (const ScanlineParms& parms)
 {
 	STD_INDEX_TO_DIRECT_CONVERT(8, 24RGB)
@@ -2189,6 +2257,63 @@ void PrvConvert8To32BGRA (const ScanlineParms& parms)
 
 #pragma mark -
 
+void PrvConvert16RGB565To1 (const ScanlineParms& parms)
+{
+	STD_DIRECT_TO_1_CONVERT(16RGB565)
+}
+
+void PrvConvert16RGB565To2 (const ScanlineParms& /*parms*/)
+{
+	EmAssert (false);
+}
+
+void PrvConvert16RGB565To4 (const ScanlineParms& /*parms*/)
+{
+	EmAssert (false);
+}
+
+void PrvConvert16RGB565To8 (const ScanlineParms& /*parms*/)
+{
+	EmAssert (false);
+}
+
+void PrvConvert16RGB565To16RGB565 (const ScanlineParms& parms)
+{
+	STD_NO_CONVERT(16)
+}
+
+void PrvConvert16RGB565To24RGB (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(16RGB565, 24RGB)
+}
+
+void PrvConvert16RGB565To24BGR (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(16RGB565, 24BGR)
+}
+
+void PrvConvert16RGB565To32ARGB (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(16RGB565, 32ARGB)
+}
+
+void PrvConvert16RGB565To32ABGR (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(16RGB565, 32ABGR )
+}
+
+void PrvConvert16RGB565To32RGBA (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(16RGB565, 32RGBA)
+}
+
+void PrvConvert16RGB565To32BGRA (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(16RGB565, 32BGRA)
+}
+
+#pragma mark -
+
 void PrvConvert24RGBTo1 (const ScanlineParms& parms)
 {
 	STD_DIRECT_TO_1_CONVERT(24RGB)
@@ -2207,6 +2332,11 @@ void PrvConvert24RGBTo4 (const ScanlineParms& /*parms*/)
 void PrvConvert24RGBTo8 (const ScanlineParms& /*parms*/)
 {
 	EmAssert (false);
+}
+
+void PrvConvert24RGBTo16RGB565 (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(24RGB, 16RGB565)
 }
 
 void PrvConvert24RGBTo24RGB (const ScanlineParms& parms)
@@ -2261,6 +2391,11 @@ void PrvConvert24BGRTo8 (const ScanlineParms& /*parms*/)
 	EmAssert (false);
 }
 
+void PrvConvert24BGRTo16RGB565 (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(24BGR, 16RGB565)
+}
+
 void PrvConvert24BGRTo24RGB (const ScanlineParms& parms)
 {
 	STD_DIRECT_CONVERT(24BGR, 24RGB)
@@ -2311,6 +2446,11 @@ void PrvConvert32ARGBTo4 (const ScanlineParms& /*parms*/)
 void PrvConvert32ARGBTo8 (const ScanlineParms& /*parms*/)
 {
 	EmAssert (false);
+}
+
+void PrvConvert32ARGBTo16RGB565 (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(32ARGB, 16RGB565)
 }
 
 void PrvConvert32ARGBTo24RGB (const ScanlineParms& parms)
@@ -2365,6 +2505,11 @@ void PrvConvert32ABGRTo8 (const ScanlineParms& /*parms*/)
 	EmAssert (false);
 }
 
+void PrvConvert32ABGRTo16RGB565 (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(32ABGR, 16RGB565 )
+}
+
 void PrvConvert32ABGRTo24RGB (const ScanlineParms& parms)
 {
 	STD_DIRECT_CONVERT(32ABGR, 24RGB )
@@ -2417,6 +2562,11 @@ void PrvConvert32RGBATo8 (const ScanlineParms& /*parms*/)
 	EmAssert (false);
 }
 
+void PrvConvert32RGBATo16RGB565 (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(32RGBA, 16RGB565)
+}
+
 void PrvConvert32RGBATo24RGB (const ScanlineParms& parms)
 {
 	STD_DIRECT_CONVERT(32RGBA, 24RGB)
@@ -2467,6 +2617,11 @@ void PrvConvert32BGRATo4 (const ScanlineParms& /*parms*/)
 void PrvConvert32BGRATo8 (const ScanlineParms& /*parms*/)
 {
 	EmAssert (false);
+}
+
+void PrvConvert32BGRATo16RGB565 (const ScanlineParms& parms)
+{
+	STD_DIRECT_CONVERT(32BGRA, 16RGB565)
 }
 
 void PrvConvert32BGRATo24RGB (const ScanlineParms& parms)

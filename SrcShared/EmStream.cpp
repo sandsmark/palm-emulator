@@ -10,6 +10,8 @@
 
 #include "Byteswapping.h"		// Canonical
 
+/* Update for GCC 4 */
+#include <string.h>
 
 #pragma mark --- Construction & Destruction ---
 

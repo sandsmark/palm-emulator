@@ -24,6 +24,8 @@
 #include "EmStream.h"			// delete imageStream
 #include "Platform.h"			// Platform::PinToScreen
 
+#include "PHEMNativeIF.h"
+
 EmWindow*	gWindow;
 
 // ---------------------------------------------------------------------------
@@ -220,6 +222,13 @@ void EmWindow::WindowReset (void)
 void EmWindow::HandlePenEvent (const EmPoint& where, Bool down)
 {
 	// Find out what part of the case we clicked on.
+        if (down) { 
+          PHEM_Log_Msg("HandlePenEvent, down");
+        } else {
+          PHEM_Log_Msg("HandlePenEvent, up");
+        }
+        PHEM_Log_Place(where.fX);
+        PHEM_Log_Place(where.fY);
 
 	SkinElementType	what;
 
@@ -229,6 +238,7 @@ void EmWindow::HandlePenEvent (const EmPoint& where, Bool down)
 	if (down && (fCurrentButton == kElement_None))
 	{
 		what = ::SkinTestPoint (where);
+                PHEM_Log_Place(what);
 
 		if ((what != kElement_Frame) && (what != kElement_None))
 		{
@@ -394,50 +404,63 @@ void EmWindow::HandleGremlinMode (Bool gremlinMode)
 void EmWindow::HandleIdle (void)
 {
 	// Get the current mouse position.
-
+        //PHEM_Log_Msg("Window:HandleIdle...");
+#if 0
+// Not sure what the purpose of this is. Seems to just make trouble,
+// generating extra presses on scroll bars and such.
 	EmPoint	where = this->HostGetCurrentMouse ();
 
 	// Track the pen if it's down.
 
 	if (fCurrentButton == kElement_Touchscreen)
 	{
-		this->HandlePenEvent (where, true);
+           //PHEM_Log_Msg("In touchscreen, generating extra event...");
+	  this->HandlePenEvent (where, true);
 	}
-
+#endif
 	// Refresh the LCD area.
 
+        //PHEM_Log_Msg("HostDrawingBegin.");
 	this->HostDrawingBegin ();
 
 	if (fNeedWindowReset)
 	{
+                PHEM_Log_Msg("WindowReset.");
 		this->WindowReset ();
 	}
 	else if (fNeedWindowInvalidate)
 	{
+                //PHEM_Log_Msg("WindowInvalidate.");
 		this->PaintScreen (false, true);
 	}
 	else
 	{
+                //PHEM_Log_Msg("!WindowInvalidate.");
 		this->PaintScreen (false, false);
 	}
 
 	fNeedWindowReset		= false;
 	fNeedWindowInvalidate	= false;
 
+        //PHEM_Log_Msg("HostDrawingEnd.");
 	this->HostDrawingEnd ();
 
 
+#if 0
+// On Android, we actually have a vibration motor
 	// Do the Wiggle Walk.
 
 	{
 		const int	kWiggleOffset = 2;
 
 		EmSessionStopper	stopper (gSession, kStopNow);
+                PHEM_Log_Msg("Wiggle?");
 
 		if (stopper.Stopped ())
 		{
 			if (EmHAL::GetVibrateOn ())
 			{
+                                PHEM_Log_Msg("Wiggling.");
 				if (!fWiggled)
 				{
 					fWiggled = true;
@@ -460,6 +483,26 @@ void EmWindow::HandleIdle (void)
 			}
 		}
 	}
+#else
+       // Android hosts have vibration motors, usually.
+       {
+          EmSessionStopper stopper (gSession, kStopNow);
+
+          if (stopper.Stopped ()) {
+            if (EmHAL::GetVibrateOn()) {
+              if (!fWiggled) {
+                fWiggled = true;
+                PHEM_Begin_Vibration();
+              }
+            } else {
+              if (fWiggled) {
+                fWiggled = false;
+                PHEM_End_Vibration();
+              }
+            }
+          }
+       }
+#endif
 }
 
 
@@ -470,12 +513,16 @@ void EmWindow::HandleIdle (void)
 
 void EmWindow::GetLCDContents (EmScreenUpdateInfo& info)
 {
+        PHEM_Log_Msg("GetLCDContents");
 	EmSessionStopper	stopper (gSession, kStopNow);
 
 	if (stopper.Stopped ())
 	{
+                PHEM_Log_Msg("All");
 		EmScreen::InvalidateAll ();
+                PHEM_Log_Msg("GetBits");
 		EmScreen::GetBits (info);
+                PHEM_Log_Msg("All");
 		EmScreen::InvalidateAll ();
 	}
 }
@@ -499,6 +546,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 	uint16				ledState;
 
 	{
+                //PHEM_Log_Msg("PaintScreen");
 		// Pause the CPU so that we can get the current hardware state.
 
 		EmSessionStopper	stopper (gSession, kStopNow);
@@ -536,9 +584,11 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 			drawFrame	= lcdOn && EmHAL::GetLCDHasFrame ();
 		}
 
+                //PHEM_Log_Msg("some vars set");
 		if (drawCase || (ledState != fOldLEDState))
 		{
 			drawLED		= ledState != 0;
+                        PHEM_Enable_LED(drawLED);
 		}
 
 		fOldLCDOn		= lcdOn;
@@ -548,6 +598,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 		// If we're going to be drawing the whole LCD, then invalidate
 		// the entire screen.
 
+                //PHEM_Log_Msg("Checking invalidate");
 		if (wholeLCD || drawLCD)
 		{
 			EmScreen::InvalidateAll ();
@@ -555,6 +606,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 
 		// Get the current LCD state.
 
+                //PHEM_Log_Msg("GetBits");
 		bufferDirty = EmScreen::GetBits (info);
 
 		// If the buffer was dirty, that's another reason to draw the LCD.
@@ -574,6 +626,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 		}
 	}
 
+                //PHEM_Log_Msg("Set up palette");
 	// Set up the graphics palette.
 
 	Bool	drawAnything = drawCase || drawFrame || drawLED || drawLCD;
@@ -586,6 +639,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 
 	// Draw the case.
 
+                //PHEM_Log_Msg("Drawcase");
 	if (drawCase)
 	{
 		this->PaintCase (info);
@@ -593,12 +647,14 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 
 	// Draw any LCD frame.
 
+                //PHEM_Log_Msg("Frame");
 	if (drawFrame)
 	{
 		this->PaintLCDFrame (info);
 	}
 
 	// Draw any LEDs.
+                //PHEM_Log_Msg("LED");
 
 	if (drawLED)
 	{
@@ -607,6 +663,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 
 	// Draw the LCD area.
 
+                //PHEM_Log_Msg("LCD");
 	if (drawLCD)
 	{
 		this->PaintLCD (info);
@@ -623,6 +680,7 @@ void EmWindow::PaintScreen (Bool drawCase, Bool wholeLCD)
 #endif
 
 	// Restore the palette that was changed in HostSetPalette.
+                //PHEM_Log_Msg("Restore palette");
 
 	if (drawAnything)
 	{
@@ -721,9 +779,13 @@ void EmWindow::PaintLED (uint16 ledState)
 		ledColor = RGBType (0, 255, 0);		// Green
 	}
 
+#if 0
 	EmRect	bounds (this->GetLEDBounds ());
 
 	this->HostOvalPaint (bounds, ledColor);
+#else
+  PHEM_Set_LED(ledColor);
+#endif
 }
 
 
@@ -760,6 +822,7 @@ void EmWindow::PaintButtonFrames (void)
 
 void EmWindow::PrefsChangedCB (PrefKeyType key, void* data)
 {
+        PHEM_Log_Msg("PrefsChangedCB called.");
 	EmAssert (data);
 
 	EmWindow* lcd = static_cast<EmWindow*>(data);
@@ -770,7 +833,7 @@ void EmWindow::PrefsChangedCB (PrefKeyType key, void* data)
 // ---------------------------------------------------------------------------
 //		¥ EmWindow::PrefsChanged
 // ---------------------------------------------------------------------------
-// Respond to a preference change.  If the sking or display size has changed,
+// Respond to a preference change.  If the skin or display size has changed,
 // we need to rebuild our skin image.  If the background color preference
 // has changed, then just flag that the LCD area needs to be redrawn.
 
@@ -908,6 +971,8 @@ void EmWindow::GetDefaultSkin (EmPixMap& pixMap)
 {
 	Preference<ScaleType>	scalePref (kPrefKeyScale);
 
+        PHEM_Log_Msg("GetDefaultSkin");
+        PHEM_Log_Place(*scalePref);
 	EmAssert ((*scalePref == 1) || (*scalePref == 2));
 
 	this->HostGetDefaultSkin (pixMap, *scalePref);

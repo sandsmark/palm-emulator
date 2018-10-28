@@ -573,6 +573,7 @@ class EmSession
 		void					InstallDataBreaks			(void);
 		void					RemoveDataBreaks			(void);
 		void					HandleDataBreak				(emuptr, int size, Bool forRead);
+                int  fstop_count; //AndroidTODO: remove
 
 	private:
 		// Initialize the state of the session and all of it's sub-systems based

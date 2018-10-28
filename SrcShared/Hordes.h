@@ -61,6 +61,9 @@ class Hordes
 
 		static void				SaveSearchProgress		(void);
 		static void				ResumeSearchProgress	(const EmFileRef& f);
+		static void				HStatus					(unsigned short* currentNumber,
+														 unsigned long* currentStep,
+														 unsigned long* currentUntil);
 		
 		static Bool				IsOn					(void);
 		static Bool				InSingleGremlinMode		(void);
@@ -72,9 +75,9 @@ class Hordes
 		static Bool				CanResume				(void);
 		static Bool				CanStop					(void);
 
-		static void				Status					(unsigned short* currentNumber,
+/*		static void				Status					(unsigned short* currentNumber,
 														 unsigned long* currentStep,
-														 unsigned long* currentUntil);
+														 unsigned long* currentUntil);*/
 
 		static void				TurnOn					(Bool hordesOn);
 

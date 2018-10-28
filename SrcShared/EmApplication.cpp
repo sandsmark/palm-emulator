@@ -37,6 +37,9 @@
 #include "Logging.h"			// LogStartup
 #include "SocketMessaging.h"	// CSocket::Startup
 
+#include "EmLowMem.h" // EmLowMem_GetGlobal() - for checking tick speed
+#include "PHEMNativeIF.h"
+
 #if HAS_TRACER
 #include "TracerPlatform.h"		// gTracer.Initialize();
 #endif
@@ -157,6 +160,17 @@ EmApplication::EmApplication (void) :
 {
 	EmAssert (gApplication == NULL);
 	gApplication = this;
+#if EMULATION_LEVEL == EMULATION_UNIX
+        last_ticks = 0;
+        ticks_per_second = 1000;
+        max_tps = 0;
+        min_tps = 1000000;
+        avg_tps = sysTicksPerSecond;
+        tps_count = 0;
+        tps_total = 0;
+        memset(&last_time, 0, sizeof(struct timespec));
+#endif
+        ticks_per_second = sysTicksPerSecond;
 }
 
 
@@ -188,17 +202,21 @@ Bool EmApplication::Startup (int argc, char** argv)
 {
 	// Load our preferences.
 
+        PHEM_Log_Msg("in App:Startup");
 	gPrefs->Load ();
 
+        PHEM_Log_Msg("Prefs loaded.");
 	CSocket::Startup ();
 	Debug::Startup ();	// Create our sockets
 	RPC::Startup ();	// Create our sockets
+        PHEM_Log_Msg("Sockets started.");
 
 #if HAS_TRACER
 	gTracer.Initialize ();
 #endif
 
 	LogStartup ();
+        PHEM_Log_Msg("Logs started.");
 
 	// Check to see if any skins were loaded. Report a possible problem if
 	// not. Only warn the user once. Don't warn for bound Posers, which have
@@ -221,10 +239,12 @@ Bool EmApplication::Startup (int argc, char** argv)
 	// Determine what startup options the user has specified on the command
 	// line.
 
+        PHEM_Log_Msg("Calling DetermineStartupActions.");
 	Bool result = Startup::DetermineStartupActions (argc, argv);
 
 	if (!result)
 	{
+                PHEM_Log_Msg("SetTimeToQuit true!");
 		this->SetTimeToQuit (true);
 	}
 
@@ -280,29 +300,37 @@ void EmApplication::HandleStartupActions (void)
 
 	try
 	{
+                PHEM_Log_Place(100);
 		if (this->IsBoundFully ())
 		{
+                        PHEM_Log_Msg("App:OpenBound");
 			this->HandleOpenBound ();
 		}
 		else if (this->IsBoundPartially ())
 		{
+                        PHEM_Log_Msg("App:NewBound");
 			this->HandleNewBound ();
 		}
 		else if (Startup::OpenSession (ref))
 		{
+                        PHEM_Log_Msg("App:OpenFromFile");
 			this->HandleOpenFromFile (ref);
 		}
 		else if (Startup::CreateSession (cfg))
 		{
+                        PHEM_Log_Msg("App:NewFromConfig");
 			this->HandleNewFromConfig (cfg);
 		}
 		else if (Startup::Minimize (ref))
 		{
+                        PHEM_Log_Msg("App:Minimize");
 			this->HandleMinimize (ref);
 		}
+                PHEM_Log_Place(106);
 	}
 	catch (ErrCode errCode)
 	{
+               PHEM_Log_Msg("App:StartupError");
 		Errors::ReportIfError (kStr_GenericOperation, errCode, 0, false);
 	}
 }
@@ -361,6 +389,62 @@ Bool EmApplication::HandleCommand (EmCommandID commandID)
 	return true;	// We handled this command.
 }
 
+#if EMULATION_LEVEL == EMULATION_UNIX
+timespec spec_diff(timespec start, timespec end)
+{
+        timespec temp;
+        if ((end.tv_nsec-start.tv_nsec)<0) {
+                temp.tv_sec = end.tv_sec-start.tv_sec-1;
+                temp.tv_nsec = 1000000000+end.tv_nsec-start.tv_nsec;
+        } else {
+                temp.tv_sec = end.tv_sec-start.tv_sec;
+                temp.tv_nsec = end.tv_nsec-start.tv_nsec;
+        }
+        return temp;
+}
+
+void  EmApplication::Prv_Measure_Ticks_Per_Second() {
+  unsigned long cur_ticks = EmLowMem_GetGlobal(hwrCurTicks);
+  struct timespec cur_time;
+  clock_gettime(CLOCK_MONOTONIC, &cur_time);
+
+  // Wait until we have two samples to start calculating.
+  if (last_time.tv_sec) {
+    timespec diffy = spec_diff(last_time, cur_time);
+
+    // Do the math.
+    if (diffy.tv_sec == 0) {
+      unsigned long tick_diff = cur_ticks - last_ticks;
+
+      double temp_tps = (tick_diff * 1000000000.0) / diffy.tv_nsec;
+      ticks_per_second = (unsigned long) (temp_tps + 0.5); // round up
+
+      if (ticks_per_second > max_tps) {
+         max_tps = ticks_per_second;
+      }
+      if (ticks_per_second < min_tps) {
+         min_tps = ticks_per_second;
+      }
+      tps_count++;
+      tps_total += ticks_per_second;
+      avg_tps = tps_total/tps_count;
+      //AndroidTODO: handle rollover.
+      //LOGI("tps: %d min: %d max: %d avg: %d", ticks_per_second, min_tps, max_tps, tps_total/tps_count);
+    } else {
+      // This ain't right.
+      //LOGI("Time diff is more than a second! %d %d", diffy.tv_sec, diffy.tv_nsec);
+    }
+  }
+
+  last_time = cur_time;
+  last_ticks = cur_ticks;
+}
+#else
+void  EmApplication::Prv_Measure_Ticks_Per_Second() {
+  // Other platforms have different timers. Too bad for them.
+}
+#endif
+
 
 // ---------------------------------------------------------------------------
 //		¥ EmApplication::HandleIdle
@@ -374,6 +458,7 @@ void EmApplication::HandleIdle (void)
 	// show an error message in a dialog.  That dialog would allow re-entry
 	// into this function.
 
+        //PHEM_Log_Msg("App:HandleIdle...");
 	static Bool	inHandleIdle;
 
 	if (inHandleIdle)
@@ -383,12 +468,17 @@ void EmApplication::HandleIdle (void)
 
 	// Pop off deferred actions and handle them.
 
+        //Prv_Measure_Ticks_Per_Second();
+        //PHEM_Measure_Ticks(EmLowMem_GetGlobal(hwrCurTicks));
+
+        //PHEM_Log_Msg("Calling DoAll.");
 	this->DoAll ();
 
 	// Idle the document.
 
 	if (gDocument)
 	{
+                //PHEM_Log_Msg("Idle Document.");
 		gDocument->HandleIdle ();
 	}
 
@@ -396,6 +486,7 @@ void EmApplication::HandleIdle (void)
 
 	if (gWindow)
 	{
+                //PHEM_Log_Msg("Idle Window.");
 		gWindow->HandleIdle ();
 	}
 }
@@ -496,24 +587,49 @@ EmDocument* EmApplication::HandleNewFromROM (const EmFileRef& romRef)
 
 EmDocument* EmApplication::HandleNewFromConfig (const Configuration& cfg)
 {
+        PHEM_Log_Msg("HandleNewFromConfig...");
 	EmAssert (!this->IsBound ());
 
+        PHEM_Log_Msg("HandleNewFromConfig...");
 	// Validate the configuration.
 
 	if (!cfg.IsValid ())
 	{
+                PHEM_Log_Msg("Invalid config...");
+                if (!cfg.fDevice.Supported()) {
+                  PHEM_Log_Msg("Device not supported!");
+                }
+
+                if (cfg.fRAMSize <= 0) {
+                  PHEM_Log_Msg("RAM <= 0!");
+                }
+
+                if (!cfg.fROMFile.IsSpecified()) {
+                  PHEM_Log_Msg("ROM file not specified!");
+                }
+
+                if (!cfg.fROMFile.Exists()) {
+                  PHEM_Log_Msg("ROM file doesn't exist!");
+                }
+
+                if (!cfg.fDevice.SupportsROM(cfg.fROMFile)) {
+                  PHEM_Log_Msg("ROM file not supported!");
+                }
+
 		Errors::Throw (kError_InvalidConfiguration);
 	}
 
-	// Close any previous document.  If the use cancels, return NULL.
+	// Close any previous document.  If the user cancels, return NULL.
 
 	if (!this->CloseDocument (false))
 	{
+                PHEM_Log_Msg("Failed to close old document!");
 		return NULL;
 	}
 
 	// Create the new document.
 
+        PHEM_Log_Msg("Creating new document.");
 	EmAssert (gDocument == NULL);
 
 	EmDocument::DoNew (cfg);
@@ -593,7 +709,7 @@ EmDocument* EmApplication::HandleOpenFromFile (const EmFileRef& file)
 	EmAssert (!this->IsBound ());
 
 	// Close any previous document.  If the use cancels, return NULL.
-
+        PHEM_Log_Msg("Closing previous doc...");
 	if (!this->CloseDocument (false))
 	{
 		return NULL;
@@ -603,6 +719,7 @@ EmDocument* EmApplication::HandleOpenFromFile (const EmFileRef& file)
 
 	EmAssert (gDocument == NULL);
 
+        PHEM_Log_Msg("Opening new doc");
 	EmDocument::DoOpen (file);
 
 	return gDocument;
@@ -789,12 +906,15 @@ void EmApplication::HandleSessionClose (const EmFileRef& ref)
 	{
 		if (ref.IsSpecified ())
 		{
+                        PHEM_Log_Msg("Calling HandleSaveTo().");
 			gDocument->HandleSaveTo (ref);
 		}
 
+                PHEM_Log_Msg("Calling HandleClose().");
 		gDocument->HandleClose (kSaveNever, false);
 	}
 
+        PHEM_Log_Msg("Returning from HandleSessionClose.");
 	EmAssert (gDocument == NULL);
 }
 

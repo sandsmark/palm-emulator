@@ -129,10 +129,10 @@ struct HwrM68EZ328Type {
 	UInt8											___filler2000[0x500-0x434];
 
 	UInt16	pwmControl;						// $500: PWM Control Register
-	UInt8		pwmSampleHi;    				// $502: PWM Sample - high byte
-	UInt8		pwmSampleLo;					// $503: PWM Sample - low byte
-	UInt8		pwmPeriod;						// $504: PWM Period
-	UInt8		pwmCounter;						// $505: PWM Counter
+	UInt8		pwmSampleHi;    			// $502: PWM Sample - high byte
+	UInt8		pwmSampleLo;				// $503: PWM Sample - low byte
+	UInt8		pwmPeriod;					// $504: PWM Period
+	UInt8		pwmCounter;					// $505: PWM Counter
 	
 	UInt8											___filler24[0x600-0x506];
 	
@@ -308,6 +308,14 @@ typedef	volatile HwrJerryPLDType*	HwrJerryPldPtr;
 	#define  hwrEZ328LcdCursorXPosCtlWhite   0xC000
 #define  hwrEZ328LcdCursorXPosValueMask		0x1FF
 #define  hwrEZ328LcdCursorYPosValueMask		0x1FF
+
+// lcdPanelControl Register
+#define	hwrEZ328LcdPanelControlBusMask		0x0C
+	#define	hwrEZ328LcdPanelControlBus1Bit	0x00
+	#define	hwrEZ328LcdPanelControlBus2Bit	0x04
+	#define	hwrEZ328LcdPanelControlBus4Bit	0x08
+#define	hwrEZ328LcdPanelControlGrayScale	0x01
+#define	hwrEZ328LcdPanelControl4BitGrayScale	0x02
 	
 #define hwrEZ328LcdCursorWidthMask			0x1F
    #define  hwrEZ328LcdCursorWidthOffset  0x8
@@ -317,13 +325,6 @@ typedef	volatile HwrJerryPLDType*	HwrJerryPldPtr;
 #define	hwrEZ328LcdBlinkControlEnable		0x80 
 #define  hwrEZ328LcdBlinkDivisorMask      0x7F
 
-// lcdPanelControl Register
-#define	hwrEZ328LcdPanelControlBusMask		0x0C
-	#define	hwrEZ328LcdPanelControlBus1Bit	0x00
-	#define	hwrEZ328LcdPanelControlBus2Bit	0x04
-	#define	hwrEZ328LcdPanelControlBus4Bit	0x08
-#define	hwrEZ328LcdPanelControlGrayScale	0x01
-#define	hwrEZ328LcdPanelControl4BitGrayScale	0x02
 
 // lcdPolarity Register
 #define	hwrEZ328LcdPolarityShiftClock		0x08

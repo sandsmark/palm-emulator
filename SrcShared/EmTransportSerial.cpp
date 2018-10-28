@@ -17,6 +17,7 @@
 #include "EmErrCodes.h"			// kError_CommOpen
 #include "Logging.h"			// LogSerial
 
+#include "PHEMNativeIF.h"
 
 EmTransportSerial::OpenPortList	EmTransportSerial::fgOpenPorts;
 
@@ -65,6 +66,8 @@ EmTransportSerial::EmTransportSerial (const EmTransportDescriptor& desc) :
 	ConfigSerial	config;
 
 	config.fPort = desc.GetSchemeSpecific ();
+        PHEM_Log_Msg("Creating serial transport:");
+        PHEM_Log_Msg(config.fPort.c_str());
 
 	this->HostConstruct ();
 	this->SetConfig (config);
@@ -135,9 +138,14 @@ ErrCode EmTransportSerial::Open (void)
 
 	if (fCommEstablished)
 	{
+          PHEM_Log_Msg("Serial transport already open:");
+          PHEM_Log_Msg(fConfig.fPort.c_str());
 		PRINTF ("EmTransportSerial::Open: Serial port already open...leaving...");
 		return kError_CommOpen;
 	}
+
+        PHEM_Log_Msg("Opening serial transport:");
+        PHEM_Log_Msg(fConfig.fPort.c_str());
 
 	EmAssert (fgOpenPorts.find (fConfig.fPort) == fgOpenPorts.end ());
 
@@ -148,16 +156,22 @@ ErrCode EmTransportSerial::Open (void)
 
 	if (err)
 	{
+           PHEM_Log_Msg("Error opening serial transport:");
+           PHEM_Log_Place(err);
 		this->HostClose ();
 	}
 	else
 	{
+           PHEM_Log_Msg("Adding serial transport to list.");
 		fCommEstablished = true;
 		fgOpenPorts[fConfig.fPort] = this;
 	}
 
-	if (err)
+	if (err) {
+           PHEM_Log_Msg("Error opening serial transport:");
+           PHEM_Log_Place(err);
 		PRINTF ("EmTransportSerial::Open: err = %ld", err);
+        }
 
 	return err;
 }
@@ -181,10 +195,14 @@ ErrCode EmTransportSerial::Close (void)
 
 	if (!fCommEstablished)
 	{
+          PHEM_Log_Msg("Serial transport already closed:");
+          PHEM_Log_Msg(fConfig.fPort.c_str());
 		PRINTF ("EmTransportSerial::Close: Serial port not open...leaving...");
 		return kError_CommNotOpen;
 	}
 
+        PHEM_Log_Msg("Closing serial transport:");
+        PHEM_Log_Msg(fConfig.fPort.c_str());
 	fCommEstablished = false;
 	fgOpenPorts.erase (fConfig.fPort);
 
@@ -535,11 +553,19 @@ Bool EmTransportSerial::GetDSR (void)
 
 EmTransportSerial* EmTransportSerial::GetTransport (const ConfigSerial& config)
 {
+        PHEM_Log_Msg("Getting transport.");
 	OpenPortList::iterator	iter = fgOpenPorts.find (config.fPort);
 
-	if (iter == fgOpenPorts.end ())
-		return NULL;
+        if (fgOpenPorts.size() > 0) {
+          PHEM_Log_Msg("Some port exists.");
+          PHEM_Log_Place(fgOpenPorts.size());
+        }
+	if (iter == fgOpenPorts.end ()) {
+          PHEM_Log_Msg("No transports.");
+	  return NULL;
+        }
 
+        PHEM_Log_Msg("Found one.");
 	return iter->second;
 }
 
