@@ -373,7 +373,7 @@ class PAS
 // Macro for creating the class that wraps up simple types.
 // ======================================================================
 
-#define DECLARE_SCALAR_ALIAS(type, asType)											\
+#define DECLARE_SCALAR_ALIAS(type, asType, EXTRA_ASSIGNMENT_OPERATORS)				\
 																					\
 	template <class A>																\
 	class EmAlias##type																\
@@ -400,7 +400,7 @@ class PAS
 			EmAlias##type<A>&	operator= (const signed int);						\
 			EmAlias##type<A>&	operator= (const signed long);						\
 																					\
-			EmAlias##type<A>&	operator= (const void*);							\
+			EXTRA_ASSIGNMENT_OPERATORS												\
 			EmAlias##type<A>&	operator= (const EmAlias##type<A>&);				\
 																					\
 								operator type (void) const;							\
@@ -414,7 +414,7 @@ class PAS
 			ptr_type			fPtr;												\
 	};
 
-#define DECLARE_SCALAR_PROXY(type, asType)											\
+#define DECLARE_SCALAR_PROXY(type, asType, EXTRA_ASSIGNMENT_OPERATORS)				\
 																					\
 	class EmProxy##type																\
 	{																				\
@@ -440,7 +440,7 @@ class PAS
 			EmProxy##type&		operator= (const signed int);						\
 			EmProxy##type&		operator= (const signed long);						\
 																					\
-			EmProxy##type&		operator= (const void*);							\
+			EXTRA_ASSIGNMENT_OPERATORS												\
 			EmProxy##type&		operator= (const EmProxy##type&);					\
 																					\
 								operator type (void) const;							\
@@ -455,8 +455,12 @@ class PAS
 	};
 
 #define DECLARE_SCALAR_CLASSES(type, asType)										\
-	DECLARE_SCALAR_ALIAS(type, asType)												\
-	DECLARE_SCALAR_PROXY(type, asType)
+	DECLARE_SCALAR_ALIAS(type, asType, /* No extra operator= */)					\
+	DECLARE_SCALAR_PROXY(type, asType, /* No extra operator= */)
+
+#define DECLARE_SCALAR_CLASSES_WITH_VOIDPTR(type, asType)							\
+	DECLARE_SCALAR_ALIAS(type, asType, EmAlias##type<A>& operator= (const void*);)	\
+	DECLARE_SCALAR_PROXY(type, asType, EmProxy##type& operator= (const void*);)
 
 #define DEFINE_SCALAR_ALIAS(type, asType)											\
 																					\
@@ -488,7 +492,6 @@ class PAS
 	MAKE_ONE_SCALAR_ALIAS_ASSIGNMENT_OPERATOR(type, asType, unsigned short)			\
 	MAKE_ONE_SCALAR_ALIAS_ASSIGNMENT_OPERATOR(type, asType, unsigned int)			\
 	MAKE_ONE_SCALAR_ALIAS_ASSIGNMENT_OPERATOR(type, asType, unsigned long)			\
-	MAKE_ONE_SCALAR_ALIAS_ASSIGNMENT_OPERATOR(type, asType, const void*)			\
 	MAKE_ONE_SCALAR_ALIAS_ASSIGNMENT_OPERATOR(type, asType, const EmAlias##type<A>&)\
 																					\
 	template <class A>																\
@@ -539,7 +542,6 @@ class PAS
 	MAKE_ONE_SCALAR_PROXY_ASSIGNMENT_OPERATOR(type, asType, unsigned short)			\
 	MAKE_ONE_SCALAR_PROXY_ASSIGNMENT_OPERATOR(type, asType, unsigned int)			\
 	MAKE_ONE_SCALAR_PROXY_ASSIGNMENT_OPERATOR(type, asType, unsigned long)			\
-	MAKE_ONE_SCALAR_PROXY_ASSIGNMENT_OPERATOR(type, asType, const void*)			\
 	MAKE_ONE_SCALAR_PROXY_ASSIGNMENT_OPERATOR(type, asType, const EmProxy##type&)	\
 																					\
 	INLINE_ EmProxy##type::operator type (void) const								\
@@ -569,6 +571,12 @@ class PAS
 #define DEFINE_SCALAR_CLASSES(type, asType)											\
 	DEFINE_SCALAR_ALIAS(type, asType)												\
 	DEFINE_SCALAR_PROXY(type, asType)
+
+#define DEFINE_SCALAR_CLASSES_WITH_VOIDPTR(type, asType)							\
+	DEFINE_SCALAR_ALIAS(type, asType)												\
+	MAKE_ONE_SCALAR_ALIAS_ASSIGNMENT_OPERATOR(type, asType, const void*)			\
+	DEFINE_SCALAR_PROXY(type, asType)												\
+	MAKE_ONE_SCALAR_PROXY_ASSIGNMENT_OPERATOR(type, asType, const void*)
 
 // Macro that creates the implementation for an assignment operator for simple types.
 
@@ -799,7 +807,7 @@ typedef uint8	ScrOperation;
 	DO_TO_SCALAR (ControlStyleType, uint8)			\
 	DO_TO_SCALAR (Coord, uint16)					\
 	DO_TO_SCALAR (DmResID, uint16)					\
-	DO_TO_SCALAR (emuptr, emuptr)					\
+	DO_TO_SCALAR##_WITH_VOIDPTR (emuptr, emuptr)	\
 	DO_TO_SCALAR (Err, uint16)						\
 	DO_TO_SCALAR (FontID, uint8)					\
 	DO_TO_SCALAR (FormObjectKind, uint8)			\

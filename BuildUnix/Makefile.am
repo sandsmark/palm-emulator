@@ -8,7 +8,8 @@ SUBDIRS			=	Gzip jpeg espws-2.0
 
 SUFFIXES		=	.cpp
 
-VPATH			=	$(srcdir)/../SrcUnix:					\
+VPATH			=	$(srcdir):								\
+					$(srcdir)/../SrcUnix:					\
 					$(srcdir)/../SrcShared:					\
 					$(srcdir)/../SrcShared/Hardware:		\
 					$(srcdir)/../SrcShared/Hardware/TRG:	\
@@ -402,9 +403,9 @@ endif
 
 bin_PROGRAMS	=	pose
 
-pose_LDADD		=	$(srcdir)/Gzip/libposergzip.a
-pose_LDADD		+=	$(srcdir)/jpeg/libposerjpeg.a
-pose_LDADD		+=	$(srcdir)/espws-2.0/libposerespws.a
+pose_LDADD		=	Gzip/libposergzip.a
+pose_LDADD		+=	jpeg/libposerjpeg.a
+pose_LDADD		+=	espws-2.0/libposerespws.a
 pose_LDADD		+=	-lfltk
 pose_LDADD		+=	-L/usr/local/lib $(X_LIBS) -lXext -lX11 $(THREAD_LIBS) $(GLLIB) -lm
 
@@ -415,7 +416,7 @@ ResStrings.cpp: $(srcdir)/../SrcShared/Strings.txt
 	perl -x $(srcdir)/../SrcShared/Strings.txt
 
 EmDlgFltkFactory.h EmDlgFltkFactory.cpp : $(srcdir)/../SrcUnix/EmDlgFltkFactory.fl
-	fluid -c $(srcdir)/../SrcUnix/EmDlgFltkFactory.fl
+	$(FLUID) -c $(srcdir)/../SrcUnix/EmDlgFltkFactory.fl
 
 EmDlgFltk.o : EmDlgFltkFactory.h
 

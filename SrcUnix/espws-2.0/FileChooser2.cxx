@@ -83,7 +83,7 @@ FileChooser::directory(const char *d)	// I - Directory to change to
 #else
     if (d[0] != '/' && d[0] != '\\')
 #endif /* WIN32 || __EMX__ */
-      filename_absolute(directory_, d);
+      fl_filename_absolute(directory_, d);
     else
     {
       strncpy(directory_, d, sizeof(directory_) - 1);
@@ -170,7 +170,7 @@ FileChooser::count()
       pathname[sizeof(pathname) - 1] = '\0';
     }
 
-    if (filename_isdir(pathname) && !directory_chooser_)
+    if (fl_filename_isdir(pathname) && !directory_chooser_)
       return (0);
     else
       return (1);
@@ -189,7 +189,7 @@ FileChooser::count()
 	pathname[sizeof(pathname) - 1] = '\0';
       }
 
-      if (!filename_isdir(pathname) || directory_chooser_)
+      if (!fl_filename_isdir(pathname) || directory_chooser_)
 	count ++;
     }
 
@@ -237,7 +237,7 @@ FileChooser::value(int f)	// I - File number
       name = fileList->text(i);
       sprintf(pathname, "%s/%s", directory_, name);
 
-      if (!filename_isdir(pathname) || directory_chooser_)
+      if (!fl_filename_isdir(pathname) || directory_chooser_)
       {
         // Nope, see if this this is "the one"...
 	count ++;
@@ -264,7 +264,7 @@ FileChooser::value(const char *filename)	// I - Filename + directory
 
 
   // See if the filename is actually a directory...
-  if (filename == NULL || filename_isdir(filename))
+  if (filename == NULL || fl_filename_isdir(filename))
   {
     // Yes, just change the current directory...
     directory(filename);
@@ -422,9 +422,9 @@ FileChooser::fileListCB()
   {
 #if defined(WIN32) || defined(__EMX__)
     if ((strlen(pathname) == 2 && pathname[1] == ':') ||
-        filename_isdir(pathname))
+        fl_filename_isdir(pathname))
 #else
-    if (filename_isdir(pathname))
+    if (fl_filename_isdir(pathname))
 #endif /* WIN32 || __EMX__ */
     {
       directory(pathname);
@@ -437,7 +437,7 @@ FileChooser::fileListCB()
   {
     fileName->value(filename);
 
-    if (!filename_isdir(pathname) || directory_chooser_)
+    if (!fl_filename_isdir(pathname) || directory_chooser_)
       okButton->activate();
   }
 }
@@ -498,9 +498,9 @@ FileChooser::fileNameCB()
 
 #if defined(WIN32) || defined(__EMX__)
     if (((strlen(pathname) == 2 && pathname[1] == ':') ||
-        filename_isdir(pathname)) && !directory_chooser_)
+        fl_filename_isdir(pathname)) && !directory_chooser_)
 #else
-    if (filename_isdir(pathname) && !directory_chooser_)
+    if (fl_filename_isdir(pathname) && !directory_chooser_)
 #endif /* WIN32 || __EMX__ */
       directory(pathname);
     else if (type_ == CREATE || access(pathname, 0) == 0)
@@ -632,7 +632,7 @@ FileChooser::fileNameCB()
     sprintf(pathname, "%s/%s", directory_, fileName->value());
 
     if ((type_ == CREATE || access(pathname, 0) == 0) &&
-        (!filename_isdir(pathname) || directory_chooser_))
+        (!fl_filename_isdir(pathname) || directory_chooser_))
       okButton->activate();
     else
       okButton->deactivate();

@@ -16,6 +16,8 @@ dnl PARTICULAR PURPOSE.
 
 # serial 1
 
+# FIXME  If Emulator work continues, we should modernise our autotools usage!
+
 dnl Usage:
 dnl AM_INIT_AUTOMAKE(package,version, [no-define])
 

@@ -8,7 +8,7 @@
 ##
 SUFFIXES =	.cpp
 
-VPATH =		$(srcdir)/../../SrcShared/Gzip:
+VPATH =		$(srcdir):$(srcdir)/../../SrcShared/Gzip:
 
 ## no subdir specific flags needed -- just go with globals
 LOCAL_CFLAGS =

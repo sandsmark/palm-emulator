@@ -231,9 +231,16 @@ struct	VPoint			{ char	_[8]; };
 // Return another kind of point
 //
 	#undef FOR_POINT
+	#ifndef BROKEN_RETURN_CASTING
 	#define FOR_POINT(cls, size, x, y)		\
 		EmPoint::operator cls() const		\
 			{ size pt[2]; pt[x] = fX; pt[y] = fY; return *(cls*) pt; }
+	#else
+	#define FOR_POINT(cls, size, x, y)		\
+		EmPoint::operator cls() const		\
+			{ union {size pt[2]; cls c;} u;	\
+			  u.pt[x] = fX; u.pt[y] = fY; return u.c; }
+	#endif
 
 	POINT_LIST_XY_LONG
 	POINT_LIST_YX_LONG

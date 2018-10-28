@@ -95,7 +95,7 @@ void EmDocumentUnix::HostSaveScreen (const EmFileRef& destRef)
 	string	fullPath = destRef.GetFullPath ();
 	char*	fNameExt = (char*) malloc (fullPath.size () + 4);
 	strcpy (fNameExt, fullPath.c_str ());
-	filename_setext (fNameExt, ".ppm");
+	fl_filename_setext (fNameExt, ".ppm");
 
 	FILE* f = fopen (fNameExt, "wb");
 	if (f)

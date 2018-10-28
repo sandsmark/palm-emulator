@@ -67,6 +67,7 @@ AR = @AR@
 CC = @CC@
 CPP = @CPP@
 CXX = @CXX@
+FLUID = @FLUID@
 GLLIB = @GLLIB@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
@@ -82,7 +83,7 @@ SUBDIRS = Gzip jpeg espws-2.0
 
 SUFFIXES = .cpp
 
-VPATH = $(srcdir)/../SrcUnix:										$(srcdir)/../SrcShared:										$(srcdir)/../SrcShared/Hardware:							$(srcdir)/../SrcShared/Hardware/TRG:						$(srcdir)/../SrcShared/omnithread:							$(srcdir)/../SrcShared/Palm/Platform/Core/System/Src:						$(srcdir)/../SrcShared/Patches:								$(srcdir)/../SrcShared/UAE:
+VPATH = $(srcdir):													$(srcdir)/../SrcUnix:										$(srcdir)/../SrcShared:										$(srcdir)/../SrcShared/Hardware:							$(srcdir)/../SrcShared/Hardware/TRG:						$(srcdir)/../SrcShared/omnithread:							$(srcdir)/../SrcShared/Palm/Platform/Core/System/Src:						$(srcdir)/../SrcShared/Patches:								$(srcdir)/../SrcShared/UAE:
 
 
 CFLAGS = $(POSER_CFLAGS) $(LOCAL_CFLAGS) $(FLAGS) $(THREAD_FLAGS) $(X_CFLAGS)
@@ -115,7 +116,7 @@ SRC_PALM = Crc.c
 @SOLARIS_FALSE@SRC_THREAD = posix.cpp
 
 bin_PROGRAMS = pose
-pose_LDADD = $(srcdir)/Gzip/libposergzip.a $(srcdir)/jpeg/libposerjpeg.a $(srcdir)/espws-2.0/libposerespws.a -lfltk -L/usr/local/lib $(X_LIBS) -lXext -lX11 $(THREAD_LIBS) $(GLLIB) -lm
+pose_LDADD = Gzip/libposergzip.a jpeg/libposerjpeg.a espws-2.0/libposerespws.a -lfltk -L/usr/local/lib $(X_LIBS) -lXext -lX11 $(THREAD_LIBS) $(GLLIB) -lm
 pose_SOURCES = $(SRC_UNIX) $(SRC_UNIX_GEN) $(SRC_SHARED) $(SRC_SHARED_HARDWARE) $(SRC_PATCHES) $(SRC_TRG) $(SRC_UAE) $(SRC_PALM) $(SRC_THREAD)
 CLEANFILES = ResStrings.cpp EmDlgFltkFactory.h EmDlgFltkFactory.cpp config.cache config.log
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -221,8 +222,8 @@ X_PRE_LIBS = @X_PRE_LIBS@
 @SOLARIS_FALSE@EmTRGCFIO.o EmTRGCFMem.o EmTRGDiskIO.o EmTRGDiskType.o \
 @SOLARIS_FALSE@EmTRGSD.o cpudefs.o cpuemu.o cpustbl.o readcpu.o Crc.o \
 @SOLARIS_FALSE@posix.o
-pose_DEPENDENCIES =  $(srcdir)/Gzip/libposergzip.a \
-$(srcdir)/jpeg/libposerjpeg.a $(srcdir)/espws-2.0/libposerespws.a
+pose_DEPENDENCIES =  Gzip/libposergzip.a jpeg/libposerjpeg.a \
+espws-2.0/libposerespws.a
 pose_LDFLAGS = 
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -647,7 +648,7 @@ ResStrings.cpp: $(srcdir)/../SrcShared/Strings.txt
 	perl -x $(srcdir)/../SrcShared/Strings.txt
 
 EmDlgFltkFactory.h EmDlgFltkFactory.cpp : $(srcdir)/../SrcUnix/EmDlgFltkFactory.fl
-	fluid -c $(srcdir)/../SrcUnix/EmDlgFltkFactory.fl
+	$(FLUID) -c $(srcdir)/../SrcUnix/EmDlgFltkFactory.fl
 
 EmDlgFltk.o : EmDlgFltkFactory.h
 

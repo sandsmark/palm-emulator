@@ -9,7 +9,7 @@
 ##
 SUFFIXES		=	.cxx
 
-VPATH			=	$(srcdir)/../../SrcUnix/espws-2.0:
+VPATH			=	$(srcdir):$(srcdir)/../../SrcUnix/espws-2.0:
 
 CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS) $(X_CFLAGS)
 CXXFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS) $(X_CFLAGS)

@@ -293,6 +293,7 @@ typedef struct HostDIRType HostDIRType;
 
 	// * HostDirEntType
 
+#undef  HOST_NAME_MAX  // Avoid conflicts with the POSIX macro
 #define HOST_NAME_MAX	255
 
 struct HostDirEntType

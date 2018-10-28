@@ -67,6 +67,7 @@ AR = @AR@
 CC = @CC@
 CPP = @CPP@
 CXX = @CXX@
+FLUID = @FLUID@
 GLLIB = @GLLIB@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
@@ -80,7 +81,7 @@ VERSION = @VERSION@
 
 SUFFIXES = .cpp
 
-VPATH = $(srcdir)/../../SrcShared/Gzip:
+VPATH = $(srcdir):$(srcdir)/../../SrcShared/Gzip:
 
 LOCAL_CFLAGS = 
 

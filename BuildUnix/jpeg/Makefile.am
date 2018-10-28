@@ -9,7 +9,7 @@
 ##
 SUFFIXES		=	.cpp
 
-VPATH			=	$(srcdir)/../../SrcShared/jpeg:
+VPATH			=	$(srcdir):$(srcdir)/../../SrcShared/jpeg:
 
 ## no subdir specific flags needed -- just go with globals
 LOCAL_CFLAGS	=
