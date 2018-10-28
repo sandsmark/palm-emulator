@@ -14,10 +14,10 @@ VPATH			=	$(srcdir):$(srcdir)/../../SrcShared/jpeg:
 ## no subdir specific flags needed -- just go with globals
 LOCAL_CFLAGS	=
 
-CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS)
-CXXFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS)
+AM_CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS)
+AM_CPPFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS)
 
-INCLUDES		=	-I$(srcdir)/../../SrcShared/jpeg	\
+AM_CPPFLAGS		+=	-I$(srcdir)/../../SrcShared/jpeg	\
 					-I$(srcdir)/../../SrcUnix
 
 noinst_LIBRARIES	=	libposerjpeg.a

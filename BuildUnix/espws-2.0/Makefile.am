@@ -11,10 +11,10 @@ SUFFIXES		=	.cxx
 
 VPATH			=	$(srcdir):$(srcdir)/../../SrcUnix/espws-2.0:
 
-CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS) $(X_CFLAGS)
-CXXFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS) $(X_CFLAGS)
+AM_CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS) $(X_CFLAGS)
+AM_CPPFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS) $(X_CFLAGS)
 
-INCLUDES		=	-I$(srddir)/../../SrcUnix/espws-2.0
+AM_CPPFLAGS		+=	-I$(srddir)/../../SrcUnix/espws-2.0
 
 noinst_LIBRARIES	=	libposerespws.a
 

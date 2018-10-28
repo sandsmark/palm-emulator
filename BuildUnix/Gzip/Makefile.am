@@ -13,10 +13,10 @@ VPATH =		$(srcdir):$(srcdir)/../../SrcShared/Gzip:
 ## no subdir specific flags needed -- just go with globals
 LOCAL_CFLAGS =
 
-CFLAGS =   	$(POSER_CFLAGS) $(LOCAL_CFLAGS)
-CXXFLAGS = 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS)
+AM_CFLAGS =   	$(POSER_CFLAGS) $(LOCAL_CFLAGS)
+AM_CPPFLAGS = 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS)
 
-INCLUDES =	-I$(srcdir)/../../SrcShared/Gzip
+AM_CPPFLAGS +=	-I$(srcdir)/../../SrcShared/Gzip
 
 noinst_LIBRARIES = libposergzip.a
 

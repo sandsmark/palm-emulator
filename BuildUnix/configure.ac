@@ -7,9 +7,10 @@ dnl ========================================================
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
 
-AC_INIT(../SrcUnix/Platform_Unix.cpp)
+AC_INIT(pose, 0, no)
 AC_CANONICAL_SYSTEM
-AM_INIT_AUTOMAKE(pose, 0, no)
+AC_CONFIG_SRCDIR([../SrcUnix/Platform_Unix.cpp])
+AM_INIT_AUTOMAKE
 
 AC_PROG_MAKE_SET
 AC_PROG_CC
@@ -58,7 +59,7 @@ dnl ----------------------------
 dnl Check sa_len of sockaddr
 dnl ----------------------------
 
-AC_DEFUN(AC_STRUCT_SA_LEN,
+AC_DEFUN([AC_STRUCT_SA_LEN],
 	[AC_CACHE_CHECK([for 'sa_len' in 'struct sockaddr'], ac_cv_struct_sa_len,
 	[AC_TRY_COMPILE([
 		#include <sys/types.h>
@@ -71,7 +72,7 @@ AC_DEFUN(AC_STRUCT_SA_LEN,
 		AC_DEFINE(HAVE_SA_LEN)
 	fi])
 
-AC_DEFUN(AC_STRUCT_SIN_LEN,
+AC_DEFUN([AC_STRUCT_SIN_LEN],
 	[AC_CACHE_CHECK([for 'sin_len' in 'struct sockaddr_in'], ac_cv_struct_sin_len,
 	[AC_TRY_COMPILE([
 		#include <sys/types.h>
@@ -85,7 +86,7 @@ AC_DEFUN(AC_STRUCT_SIN_LEN,
 		AC_DEFINE(HAVE_SIN_LEN)
 	fi])
 
-AC_DEFUN(AC_TYPE_SOCKLEN_T,
+AC_DEFUN([AC_TYPE_SOCKLEN_T],
 	[AC_CACHE_CHECK([for 'socklen_t'], ac_cv_type_socklen_t,
 	[AC_TRY_COMPILE([
 		#include <sys/types.h>

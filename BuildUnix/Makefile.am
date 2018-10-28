@@ -21,29 +21,29 @@ VPATH			=	$(srcdir):								\
 
 ## POSER_CFLAGS and POSER_CXXFLAGS defined by configure.in.
 
-CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS) $(FLAGS) $(THREAD_FLAGS) $(X_CFLAGS)
-CXXFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS) $(FLAGS) $(THREAD_FLAGS) $(X_CFLAGS)
+AM_CFLAGS			=   $(POSER_CFLAGS) $(LOCAL_CFLAGS) $(FLAGS) $(THREAD_FLAGS) $(X_CFLAGS)
+AM_CPPFLAGS		= 	$(POSER_CXXFLAGS) $(LOCAL_CFLAGS) $(FLAGS) $(THREAD_FLAGS) $(X_CFLAGS)
 
-INCLUDES		=	-I$(srcdir)/../SrcShared
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Hardware
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Hardware/TRG
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Device
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Core/Hardware/IncsPrv
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Core/System/IncsPrv
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core/Hardware
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core/System
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core/UI
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Libraries
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Gzip
-INCLUDES		+=	-I$(srcdir)/../SrcShared/jpeg
-INCLUDES		+=	-I$(srcdir)/../SrcShared/omnithread
-INCLUDES		+=	-I$(srcdir)/../SrcShared/Patches
-INCLUDES		+=	-I$(srcdir)/../SrcShared/UAE
-INCLUDES		+=	-I$(srcdir)/../SrcUnix
-INCLUDES		+=	-I$(srcdir)/../SrcUnix/espws-2.0
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Hardware
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Hardware/TRG
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Device
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Core/Hardware/IncsPrv
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Core/System/IncsPrv
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core/Hardware
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core/System
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Core/UI
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Palm/Platform/Incs/Libraries
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Gzip
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/jpeg
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/omnithread
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/Patches
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcShared/UAE
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcUnix
+AM_CPPFLAGS		+=	-I$(srcdir)/../SrcUnix/espws-2.0
 
 SRC_UNIX		= 	EmApplicationFltk.cpp			\
 					EmApplicationFltk.h				\
