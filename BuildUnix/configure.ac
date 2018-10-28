@@ -139,7 +139,6 @@ dnl ========================================================
 
 THREAD_FLAGS="-D_REENTRANT -DNoNanoSleep -DPthreadDraftVersion=10"
 THREAD_LIBS="-lpthread"
-USE_SOLARIS_CPP="false"
 
 
 dnl ========================================================
@@ -188,24 +187,6 @@ dnl	THREAD_LIBS="-lpthread -lmach -lc_r"
 dnl Options for OSF 1.4
 	THREAD_FLAGS="-D_REENTRANT -pthread -DNoNanoSleep -DPthreadDraftVersion=10"
 	THREAD_LIBS="-lcma"
-	;;
-
-*-solaris*)
-	# -g somehow helps the assembler understand long symbol names
-	THREAD_FLAGS="-g -D_REENTRANT -DPthreadDraftVersion=10 -DPthreadSupportThreadPriority"
-	THREAD_LIBS="-lnsl -lsocket -lthread -lposix4"
-dnl I'd really like to check the compiler directly to see if it supports -fpermissive,
-dnl but I don't know how to get autoconf to do that.
-	_COMPILER_CFLAGS="${_COMPILER_CFLAGS} -fpermissive"
-	_COMPILER_CXXFLAGS="${_COMPILER_CXXFLAGS} -fpermissive"
-	USE_SOLARIS_CPP="true"
-	;;
-
-*-sunos*)
-	# -g somehow helps the assembler understand long symbol names
-	THREAD_FLAGS="-g -D_REENTRANT -DPthreadDraftVersion=10 -DPthreadSupportThreadPriority"
-	THREAD_LIBS="-lnsl -lsocket -lthread -lposix4"
-	USE_SOLARIS_CPP="true"
 	;;
 
 *-freebsd*)
@@ -440,7 +421,5 @@ dnl that the first time, and I guess "test" needs those
 dnl in order to know that '=' is an operator.  Without the
 dnl spaces, I got incorrect results.
 dnl ========================================================
-
-AM_CONDITIONAL(SOLARIS, test x$USE_SOLARIS_CPP = xtrue)
 
 AC_OUTPUT(Makefile Gzip/Makefile jpeg/Makefile espws-2.0/Makefile)

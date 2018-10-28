@@ -395,11 +395,7 @@ SRC_UAE			=	UAE.h							\
 
 SRC_PALM		=	Crc.c
 
-if SOLARIS
-SRC_THREAD		=	solaris.cpp
-else
 SRC_THREAD		=	posix.cpp
-endif
 
 bin_PROGRAMS	=	pose
 
