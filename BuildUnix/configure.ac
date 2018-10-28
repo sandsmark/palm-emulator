@@ -319,34 +319,6 @@ AC_CHECK_HEADER(GL/glu.h,
 
 AC_SUBST(GLLIB)
 
-
-dnl ========================================================
-dnl Check whether the following code distilled from EmPoint.cpp
-dnl is compiled correctly -- GCC 3.3.x miscompiles this.
-dnl ========================================================
-
-AC_CACHE_CHECK([whether certain fragile casting works],
-	pose_cv_return_casting_ok,
-	AC_TRY_RUN([[
-		struct point { short x, y; };
-		point foo (long fX, long fY)
-		{
-			short pt[2]; pt[0] = fX; pt[1] = fY; return *(point*)pt;
-		}
-		int main()
-		{
-			point p = foo (28, 37);
-			return (p.x == 28 && p.y == 37)? 0 : 1;
-		}
-		]],
-		pose_cv_return_casting_ok=yes, pose_cv_return_casting_ok=no,
-		pose_cv_return_casting_ok="assuming yes"))
-
-if test "$pose_cv_return_casting_ok" = no; then
-	AC_DEFINE(BROKEN_RETURN_CASTING)
-fi
-
-
 dnl ========================================================
 dnl Make sure FLTK is available.  It must be installed on
 dnl a standard path, or on $x_libraries, or via --with-fltk.
