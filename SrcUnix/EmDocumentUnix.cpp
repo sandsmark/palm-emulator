@@ -17,7 +17,7 @@
 #include "EmScreen.h"			// EmScreen
 
 // !!! Need to get rid of this dependancy on FLTK
-#include <FL/filename.h>		// filename_setext
+#include <FL/filename.H>		// filename_setext
 
 #include <stdio.h>				// fopen, fprintf, fwrite, fclose, FILE
 
