@@ -643,7 +643,7 @@ void EmWindowFltk::HostPaintLCD (const EmScreenUpdateInfo& info, const EmRect& s
 
 void EmWindowFltk::HostGetDefaultSkin (EmPixMap& pixMap, int scale)
 {
-	char** xpm = (scale == 2) ? DefaultLarge : DefaultSmall;
+	const char** xpm = (scale == 2) ? DefaultLarge : DefaultSmall;
 
 	/*
 		An XPM file is an array of strings composed of four sections:
@@ -729,7 +729,7 @@ void EmWindowFltk::HostGetDefaultSkin (EmPixMap& pixMap, int scale)
 
 	for (int yy = 0; yy < h; ++yy)
 	{
-		char* src = xpm [1 + num_colors + yy];
+		const char* src = xpm [1 + num_colors + yy];
 
 		for (int xx = 0; xx < w; ++xx)
 		{
