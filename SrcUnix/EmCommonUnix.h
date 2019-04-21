@@ -30,6 +30,9 @@
 
 #include "Palm.h"
 
+#define PHEM_Log_Msg(msg) fprintf(stderr, "%s\n", msg)
+#define PHEM_Log_Place(val) fprintf(stderr, "%s:%d %d\n", __FILE__, __LINE__, val)
+#define PHEM_Log_Hex(val) fprintf(stderr, "%x\n", val)
 
 // Std C/C++ Library stuff
 
@@ -43,7 +46,8 @@
 //#include <stddef.h>
 //#include <stdio.h>
 //#include <stdlib.h>
-//#include <string.h>
+#include <string.h>
+#include <limits.h>
 
 //#include <sys/types.h>
 //#include <sys/socket.h>
