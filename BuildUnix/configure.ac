@@ -298,27 +298,6 @@ dnl OpenGL is present, FLTK was configured to use it, and
 dnl so we need to link with it.
 dnl ========================================================
 
-GLLIB=
-
-AC_CHECK_HEADER(GL/gl.h,
-	AC_CHECK_LIB(GL, glXMakeCurrent, AC_DEFINE(HAVE_GL) GLLIB="-lGL", \
-		AC_CHECK_LIB(MesaGL, glXMakeCurrent, AC_DEFINE(HAVE_GL) GLLIB=" -lMesaGL",,\
-		-L${ac_x_libraries} -lX11 -lXext $X_EXTRA_LIBS -lm), \
-		-L${ac_x_libraries} -lX11 -lXext $X_EXTRA_LIBS -lm)
-)
-
-AC_CHECK_HEADER(GL/glu.h,
-	AC_DEFINE(HAVE_GL_GLU_H)
-	if test x$ac_cv_lib_GL_glXMakeCurrent = xyes; then
-		GLLIB="-lGLU $GLLIB"
-	fi
-	if test x$ac_cv_lib_MesaGL_glXMakeCurrent = xyes; then
-		GLLIB="-lMesaGLU $GLLIB"
-	fi
-)
-
-AC_SUBST(GLLIB)
-
 dnl ========================================================
 dnl Make sure FLTK is available.  It must be installed on
 dnl a standard path, or on $x_libraries, or via --with-fltk.
@@ -329,7 +308,7 @@ AC_CACHE_SAVE
 
 dnl Temporarily add -lfltk and OTHER-LIBRARIES (cf AC_CHECK_LIB) to $LIBS
 save_LIBS="$LIBS"
-LIBS="-lfltk ${GLLIB} -L${ac_x_libraries} -lXext -lX11 -lm $X_EXTRA_LIBS $LIBS"
+LIBS="-lfltk -lGL -L${ac_x_libraries} -lXext -lX11 -lm $X_EXTRA_LIBS $LIBS"
 
 AC_LANG_CPLUSPLUS
 
