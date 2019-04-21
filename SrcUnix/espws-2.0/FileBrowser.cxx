@@ -467,7 +467,7 @@ FileBrowser::load(const char *directory)// I - Directory to load
 
     num_files = fl_filename_list(filename, &files);
 #else
-    num_files = fl_filename_list(directory_, &files);
+    num_files = scandir(directory_, &files, nullptr, nullptr);
 #endif /* WIN32 || __EMX__ */
 
     if (num_files <= 0)
