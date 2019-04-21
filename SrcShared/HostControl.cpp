@@ -4237,7 +4237,7 @@ static void _HostGetVolSize(void)
 
         struct statvfs the_stats;
 
-        PHEM_Log_Msg(path);
+        PHEM_Log_Msg((char*)path);
         if (statvfs(path, &the_stats)) {
           PHEM_Log_Msg("Host get vol size failure!");
           PUT_RESULT_VAL (UInt32, 0);
@@ -4268,7 +4268,7 @@ static void _HostGetVolFree(void)
 
         struct statvfs the_stats;
 
-        PHEM_Log_Msg(path);
+        PHEM_Log_Msg((char*)path);
         if (statvfs(path, &the_stats)) {
           PHEM_Log_Msg("Host get vol free failure!");
           PUT_RESULT_VAL (long, 0);

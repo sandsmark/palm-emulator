@@ -85,6 +85,8 @@ class EcmObject :
 		{
 		}
 
+        virtual ~EcmObject() {}
+
 
 
 		//This forms the root of the interface request implementation:

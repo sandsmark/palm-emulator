@@ -523,6 +523,7 @@ class ParamPtr
 						}
 
 						operator T*(void) { return fVal; }
+						operator const T*(void) const { return fVal; }
 
 						operator emuptr (void) { return fPtr; }
 

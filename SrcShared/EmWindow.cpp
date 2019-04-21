@@ -454,7 +454,7 @@ void EmWindow::HandleIdle (void)
 		const int	kWiggleOffset = 2;
 
 		EmSessionStopper	stopper (gSession, kStopNow);
-                PHEM_Log_Msg("Wiggle?");
+                //PHEM_Log_Msg("Wiggle?");
 
 		if (stopper.Stopped ())
 		{
