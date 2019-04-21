@@ -119,14 +119,17 @@ dnl Set the defaults first
 dnl ========================================================
 
 AR='ar'
-FLAGS_COMMON="-DPLATFORM_UNIX=1 -D__PALMOS_TRAPS__=0 -DEMULATION_LEVEL=EMULATION_UNIX"
+FLAGS_COMMON="-DPLATFORM_UNIX=1 -D__PALMOS_TRAPS__=0 -DEMULATION_LEVEL=EMULATION_UNIX -m32"
 
+dnl force 32bit for now
+
+LDFLAGS="${LDFLAGS} -m32"
 
 dnl ========================================================
 dnl Define some standard warning flags 
 dnl ========================================================
 
-_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -fexceptions -Wall -Wno-multichar -Wno-unknown-pragmas -Wno-conversion"
+_WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -fexceptions -Wall -Wno-multichar -Wno-unknown-pragmas -Wno-conversion -Wno-missing-braces"
 _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -fexceptions -Wall -Wno-multichar -Wno-unknown-pragmas -Wno-conversion"
 
 _COMPILER_CFLAGS="${_COMPILER_CFLAGS}"
