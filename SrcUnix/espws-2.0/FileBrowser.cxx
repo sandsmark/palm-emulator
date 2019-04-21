@@ -60,16 +60,15 @@
 #define SELECTED 1
 #define NOTDISPLAYED 2
 
-struct FL_BLINE			// data is in a linked list of these
-{
-  FL_BLINE	*prev;		// Previous item in list
-  FL_BLINE	*next;		// Next item in list
-  void		*data;		// Pointer to data (function)
-  short		length;		// sizeof(txt)-1, may be longer than string
-  char		flags;		// selected, displayed
-  char		txt[1];		// start of allocated array
+struct FL_BLINE {	// data is in a linked list of these
+  FL_BLINE* prev;
+  FL_BLINE* next;
+  void* data;
+  Fl_Image* icon;
+  short length;		// sizeof(txt)-1, may be longer than string
+  char flags;		// selected, displayed
+  char txt[1];		// start of allocated array
 };
-
 
 //
 // 'FileBrowser::item_height()' - Return the height of a list item.
@@ -78,8 +77,7 @@ struct FL_BLINE			// data is in a linked list of these
 int					// O - Height in pixels
 FileBrowser::item_height(void *p) const	// I - List item data
 {
-  FL_BLINE	*line;			// Pointer to line
-  char		*text;			// Pointer into text
+  const char		*text;			// Pointer into text
   int		height;			// Width of line
   int		textheight;		// Height of text
 
@@ -92,10 +90,8 @@ FileBrowser::item_height(void *p) const	// I - List item data
   height = textheight;
 
   // Scan for newlines...
-  line = (FL_BLINE *)p;
-
-  if (line != NULL)
-    for (text = line->txt; *text != '\0'; text ++)
+  if (p != NULL)
+    for (text = item_text(p); *text != '\0'; text ++)
       if (*text == '\n')
 	height += textheight;
 
@@ -119,9 +115,8 @@ int					// O - Width in pixels
 FileBrowser::item_width(void *p) const	// I - List item data
 {
   int		i;			// Looping var
-  FL_BLINE	*line;			// Pointer to line
-  char		*text,			// Pointer into text
-		*ptr,			// Pointer into fragment
+  const char		*text;			// Pointer into text
+  char	*ptr,			// Pointer into fragment
 		fragment[10240];	// Fragment of text
   int		width,			// Width of line
 		tempwidth;		// Width of fragment
@@ -133,14 +128,13 @@ FileBrowser::item_width(void *p) const	// I - List item data
   fl_font(textfont(), textsize());
 
   // Scan for newlines...
-  line    = (FL_BLINE *)p;
   columns = column_widths();
 
-  if (strchr(line->txt, '\n') == NULL &&
-      strchr(line->txt, column_char()) == NULL)
+  if (strchr(item_text(p), '\n') == NULL &&
+      strchr(item_text(p), column_char()) == NULL)
   {
     // Do a fast width calculation...
-    width = (int)fl_width(line->txt);
+    width = (int)fl_width(item_text(p));
   }
   else
   {
@@ -149,7 +143,7 @@ FileBrowser::item_width(void *p) const	// I - List item data
     tempwidth = 0;
     column    = 0;
 
-    for (text = line->txt, ptr = fragment; *text != '\0'; text ++)
+    for (text = item_text(p), ptr = fragment; *text != '\0'; text ++)
       if (*text == '\n')
       {
         // Newline - nul terminate this fragment and get the width...
@@ -224,21 +218,20 @@ FileBrowser::item_draw(void *p,		// I - List item data
   int		i;			// Looping var
   FL_BLINE	*line;			// Pointer to line
   Fl_Color	c;			// Text color
-  char		*text,			// Pointer into text
-		*ptr,			// Pointer into fragment
+  const char		*text;			// Pointer into text
+  char		*ptr,			// Pointer into fragment
 		fragment[10240];	// Fragment of text
   int		width,			// Width of line
 		height;			// Height of line
   int		column;			// Current column
   const int	*columns;		// Columns
 
-
   // Draw the list item text...
   line = (FL_BLINE *)p;
 
   fl_font(textfont(), textsize());
 
-  if (line->flags & SELECTED)
+  if (item_selected(p))
     c = fl_contrast(textcolor(), selection_color());
   else
     c = textcolor();
@@ -254,7 +247,7 @@ FileBrowser::item_draw(void *p,		// I - List item data
     // Draw the icon if it is set...
     if (line->data)
       ((FileIcon *)line->data)->draw(x, y, iconsize_, iconsize_,
-                                     (line->flags & SELECTED) ? FL_YELLOW :
+                                     item_selected(p) ? FL_YELLOW :
 				                                FL_LIGHT2,
 				     active_r());
 
@@ -263,10 +256,9 @@ FileBrowser::item_draw(void *p,		// I - List item data
     w -= iconsize_ - 10;
 
     // Center the text vertically...
-    line   = (FL_BLINE *)p;
     height = fl_height();
 
-    for (text = line->txt; *text != '\0'; text ++)
+    for (text = item_text(p); *text != '\0'; text ++)
       if (*text == '\n')
 	height += fl_height();
 
@@ -275,7 +267,6 @@ FileBrowser::item_draw(void *p,		// I - List item data
   }
 
   // Draw the text...
-  line    = (FL_BLINE *)p;
   columns = column_widths();
   width   = 0;
   column  = 0;
@@ -285,7 +276,7 @@ FileBrowser::item_draw(void *p,		// I - List item data
   else
     fl_color(fl_inactive(c));
 
-  for (text = line->txt, ptr = fragment; *text != '\0'; text ++)
+  for (text = item_text(p), ptr = fragment; *text != '\0'; text ++)
     if (*text == '\n')
     {
       // Newline - nul terminate this fragment and draw it...
