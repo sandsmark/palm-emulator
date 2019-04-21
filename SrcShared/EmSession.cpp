@@ -11,6 +11,9 @@
 	(at your option) any later version.
 \* ===================================================================== */
 
+#define DONT_DEBUG_THIS
+#include "PHEMNativeIF.h"
+
 #include "EmCommon.h"
 #include "EmSession.h"
 
@@ -41,8 +44,6 @@
 #include "EmScreen.h"			// EmScreen::Initialize ();
 #include "ErrorHandling.h"		// Errors::Initialize ();
 #include "EmPalmOS.h"			// EmPalmOS::Initialize
-
-#include "PHEMNativeIF.h"
 
 #ifndef NDEBUG
 #include <android/log.h>
