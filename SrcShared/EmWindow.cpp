@@ -446,7 +446,7 @@ void EmWindow::HandleIdle (void)
 	this->HostDrawingEnd ();
 
 
-#if 0
+#if 1
 // On Android, we actually have a vibration motor
 	// Do the Wiggle Walk.
 
@@ -779,7 +779,7 @@ void EmWindow::PaintLED (uint16 ledState)
 		ledColor = RGBType (0, 255, 0);		// Green
 	}
 
-#if 0
+#if 1
 	EmRect	bounds (this->GetLEDBounds ());
 
 	this->HostOvalPaint (bounds, ledColor);
