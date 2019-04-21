@@ -100,7 +100,7 @@
 #include <FL/Fl_Window.H>
 #include <FL/fl_ask.H>
 #include <FL/fl_draw.H>
-#include <FL/fl_file_chooser.H>
+#include <FL/Fl_File_Chooser.H>
 #include <FL/fl_message.H>
 #include <FL/fl_show_colormap.H>
 #include <FL/fl_show_input.H>
