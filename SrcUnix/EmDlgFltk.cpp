@@ -663,7 +663,10 @@ static int postModalDialog (Fl_Window* dlg)
 
 void openURL (Fl_Button* box, void*)
 {
-	char buffer[PATH_MAX];
+    printf("who the fuck decided fltk was a good idea\n");
+    return;
+
+	char buffer[PATH_MAX*3];
 	char url[PATH_MAX];
 
 	box->labelcolor (FL_RED);
@@ -672,11 +675,7 @@ void openURL (Fl_Button* box, void*)
 	strcpy (url, &(box->label()[1]));
 	url [strlen (url) - 1] = '\0';
 
-#ifdef __QNXNTO__
-	sprintf (buffer, "voyager -u %s &", url);
-#else
-	sprintf (buffer, "netscape -remote 'openURL(%s,new-window)' || netscape '%s' &", url, url);
-#endif
+	snprintf (buffer, PATH_MAX*3, "netscape -remote 'openURL(%s,new-window)' || netscape '%s' &", url, url);
 
 	system (buffer);
 }
@@ -1968,15 +1967,14 @@ int EmDlg::GetTextHeight (EmDlgRef dlg, EmDlgItemID item, const string& s)
 
 		Fl_Label label =
 		{
-			s.c_str (),
-#ifndef HAVE_LEGACY_FL_LABEL
-			NULL,
-			NULL,
-#endif
-			FL_NORMAL_LABEL,
+			s.c_str (), // value
+			NULL, // image
+			NULL, // deactivated image
 			i->textfont (),
 			i->textsize (),
-			i->textcolor ()
+			i->textcolor (),
+            FL_ALIGN_INSIDE,
+			FL_NORMAL_LABEL
 		};
 
 		label.measure (width, result);
@@ -1999,14 +1997,13 @@ int EmDlg::GetTextHeight (EmDlgRef dlg, EmDlgItemID item, const string& s)
 		Fl_Label label =
 		{
 			s.c_str (),
-#ifndef HAVE_LEGACY_FL_LABEL
-			NULL,
-			NULL,
-#endif
-			o->labeltype (),
+			NULL, //image
+			NULL, //deactivated image
 			o->labelfont (),
 			o->labelsize (),
-			o->labelcolor ()
+			o->labelcolor (),
+            FL_ALIGN_INSIDE,
+			o->labeltype ()
 		};
 
 		label.measure (width, result);
